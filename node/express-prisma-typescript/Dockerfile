@@ -42,5 +42,7 @@ COPY --from=deps /app/package.json ./
 COPY nodemon.json ./nodemon.json
 COPY tsconfig.json ./tsconfig.json
 COPY . .
+RUN apk update && apk upgrade
+RUN apk add --no-cache openssl
 
 CMD yarn dev
