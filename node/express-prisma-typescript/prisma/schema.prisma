@@ -13,7 +13,6 @@ generator client {
 // You can find more about datasources here: https://www.prisma.io/docs/concepts/components/prisma-schema/data-sources
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -31,6 +30,8 @@ model User {
   posts     Post[]
   follows   Follow[] @relation(name: "follows")
   followers Follow[] @relation(name: "followers")
+
+  isPublic  Boolean  @default(true)
 }
 
 model Follow {

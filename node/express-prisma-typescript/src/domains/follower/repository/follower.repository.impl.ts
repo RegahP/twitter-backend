@@ -1,5 +1,5 @@
 import { FollowerRepository } from './follower.repository'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, Follow } from '@prisma/client'
 import { OffsetPagination } from '@types'
 import { FollowDTO, FollowInputDTO } from '../dto'
 
@@ -32,7 +32,7 @@ export class FollowerRepositoryImpl implements FollowerRepository {
   }
 
   async getFollowers (userId: string, options: OffsetPagination): Promise<string[]> {
-    const followers = await this.db.follow.findMany({
+    const followers: Follow[] = await this.db.follow.findMany({
       where: {
         followedId: userId
       },
@@ -43,7 +43,7 @@ export class FollowerRepositoryImpl implements FollowerRepository {
   }
 
   async getFollowing (userId: string, options: OffsetPagination): Promise<string[]> {
-    const following = await this.db.follow.findMany({
+    const following: Follow[] = await this.db.follow.findMany({
       where: {
         followerId: userId
       },

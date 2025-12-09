@@ -21,4 +21,8 @@ export class UserServiceImpl implements UserService {
   async deleteUser (userId: any): Promise<void> {
     await this.repository.delete(userId)
   }
+
+  async isPublicProfile (userId: string): Promise<boolean> {
+    return await this.repository.isPublicProfile(userId)
+  }
 }

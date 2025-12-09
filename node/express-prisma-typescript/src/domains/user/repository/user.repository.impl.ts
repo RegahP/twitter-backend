@@ -1,5 +1,5 @@
 import { SignupInputDTO } from '@domains/auth/dto'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, User } from '@prisma/client'
 import { OffsetPagination } from '@types'
 import { ExtendedUserDTO, UserDTO } from '../dto'
 import { UserRepository } from './user.repository'
@@ -31,7 +31,7 @@ export class UserRepositoryImpl implements UserRepository {
   }
 
   async getRecommendedUsersPaginated (options: OffsetPagination): Promise<UserDTO[]> {
-    const users = await this.db.user.findMany({
+    const users: User[] = await this.db.user.findMany({
       take: options.limit ? options.limit : undefined,
       skip: options.skip ? options.skip : undefined,
       orderBy: [
@@ -57,5 +57,17 @@ export class UserRepositoryImpl implements UserRepository {
       }
     })
     return user ? new ExtendedUserDTO(user) : null
+  }
+
+  async isPublicProfile (userId: string): Promise<boolean> {
+    const user = await this.db.user.findUnique({
+      where: {
+        id: userId
+      },
+      select: {
+        isPublic: true
+      }
+    })
+    return user ? user.isPublic : false
   }
 }
