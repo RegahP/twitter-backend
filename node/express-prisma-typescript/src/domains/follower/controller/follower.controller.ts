@@ -15,22 +15,25 @@ export const followerRouter = Router()
 const followerRepository = new FollowerRepositoryImpl(db)
 const followerService: FollowerService = new FollowerServiceImpl(followerRepository)
 
-followerRouter.post('/follow', async (req: Request, res: Response) => {
-  const { followerId, followedId } = req.body
-  await followerService.followUser(new FollowInputDTO({ followerId, followedId }))
+followerRouter.post('/follow/:userId', async (req: Request, res: Response) => {
+  const { userId } = res.locals.context
+  const { followedId } = req.body
+  await followerService.followUser(new FollowInputDTO({ followerId: userId, followedId }))
   res.sendStatus(HttpStatus.OK)
 })
 
-followerRouter.post('/unfollow', async (req: Request, res: Response) => {
-  const { followerId, followedId } = req.body
-  await followerService.unfollowUser(new FollowInputDTO({ followerId, followedId }))
+followerRouter.post('/unfollow/:userId', async (req: Request, res: Response) => {
+  const { userId } = res.locals.context
+  const { followedId } = req.body
+  await followerService.unfollowUser(new FollowInputDTO({ followerId: userId, followedId }))
   res.sendStatus(HttpStatus.OK)
 })
 
 followerRouter.get('/is-following', async (req: Request, res: Response) => {
-  const { followerId, followedId } = req.query
+  const { userId } = res.locals.context
+  const { followedId } = req.query
   const isFollowing = await followerService.isFollowing(new FollowInputDTO({
-    followerId: String(followerId),
+    followerId: String(userId),
     followedId: String(followedId)
   }))
   res.status(HttpStatus.OK).json({ isFollowing })
