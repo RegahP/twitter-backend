@@ -4,8 +4,8 @@ import cookieParser from 'cookie-parser'
 import cors from 'cors'
 
 import { Constants, NodeEnv, Logger } from '@utils'
-import { router } from '@router'
-import { ErrorHandling } from '@utils/errors'
+import { router } from './router'
+import { ErrorHandling } from './utils/errors'
 
 const app = express()
 

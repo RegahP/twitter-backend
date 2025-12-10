@@ -8,21 +8,20 @@ export class UserRepositoryImpl implements UserRepository {
   constructor (private readonly db: PrismaClient) {}
 
   async create (data: SignupInputDTO): Promise<UserDTO> {
-    return await this.db.user.create({
-      data
-    }).then(user => new UserDTO(user))
+    const user = await this.db.user.create({ data })
+    return new UserDTO(user)
   }
 
-  async getById (userId: any): Promise<UserDTO | null> {
+  async getById (userId: string): Promise<UserDTO | null> {
     const user = await this.db.user.findUnique({
       where: {
         id: userId
       }
     })
-    return user ? new UserDTO(user) : null
+    return user !== null ? new UserDTO(user) : null
   }
 
-  async delete (userId: any): Promise<void> {
+  async delete (userId: string): Promise<void> {
     await this.db.user.delete({
       where: {
         id: userId
@@ -56,7 +55,7 @@ export class UserRepositoryImpl implements UserRepository {
         ]
       }
     })
-    return user ? new ExtendedUserDTO(user) : null
+    return user !== null ? new ExtendedUserDTO(user) : null
   }
 
   async isPublicProfile (userId: string): Promise<boolean> {
@@ -68,6 +67,6 @@ export class UserRepositoryImpl implements UserRepository {
         isPublic: true
       }
     })
-    return user ? user.isPublic : false
+    return user !== null ? user.isPublic : false
   }
 }

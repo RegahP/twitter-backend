@@ -1,5 +1,7 @@
+import { User } from '@prisma/client'
+
 export class UserDTO {
-  constructor (user: UserDTO) {
+  constructor (user: User) {
     this.id = user.id
     this.name = user.name
     this.createdAt = user.createdAt

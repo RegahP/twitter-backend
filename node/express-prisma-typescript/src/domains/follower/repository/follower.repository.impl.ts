@@ -7,9 +7,8 @@ export class FollowerRepositoryImpl implements FollowerRepository {
   constructor (private readonly db: PrismaClient) {}
 
   async followUser (data: FollowInputDTO): Promise<FollowDTO> {
-    return await this.db.follow.create({
-      data
-    }).then(follow => new FollowDTO(follow))
+    const follow = await this.db.follow.create({ data })
+    return new FollowDTO(follow)
   }
 
   async unfollowUser (data: FollowInputDTO): Promise<void> {

@@ -29,13 +29,10 @@ followerRouter.post('/unfollow/:userId', async (req: Request, res: Response) => 
   res.sendStatus(HttpStatus.OK)
 })
 
-followerRouter.get('/is-following', async (req: Request, res: Response) => {
-  const { userId } = res.locals.context
+followerRouter.get('/is-following', async (req: Request<any, any, any, { followedId: string }>, res: Response) => {
+  const { userId }: { userId: string } = res.locals.context
   const { followedId } = req.query
-  const isFollowing = await followerService.isFollowing(new FollowInputDTO({
-    followerId: String(userId),
-    followedId: String(followedId)
-  }))
+  const isFollowing = await followerService.isFollowing(new FollowInputDTO({ followerId: userId, followedId }))
   res.status(HttpStatus.OK).json({ isFollowing })
 })
 

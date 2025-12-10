@@ -21,7 +21,9 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@*": ["./*"]
+      "@domains/*": ["./domains/*"],
+      "@types": ["./types"],
+      "@utils": ["./utils"]
     }
   },
   "lib": ["es2022"],
