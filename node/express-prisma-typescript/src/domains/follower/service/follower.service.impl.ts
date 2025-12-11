@@ -2,7 +2,8 @@ import { OffsetPagination } from '@types'
 import { FollowerRepository } from '../repository'
 import { FollowerService } from './follower.service'
 import { FollowDTO, FollowInputDTO } from '../dto'
-import { ForbiddenException, ConflictException } from '@utils'
+import { ForbiddenException, ConflictException } from '../../../utils/errors'
+import { UserDTO } from '@domains/user/dto'
 
 export class FollowerServiceImpl implements FollowerService {
   constructor (private readonly repository: FollowerRepository) {}
@@ -13,19 +14,19 @@ export class FollowerServiceImpl implements FollowerService {
     return await this.repository.followUser(data)
   }
 
-  async unfollowUser (data: FollowInputDTO): Promise<void> {
-    await this.repository.unfollowUser(data)
+  async unfollowUser (data: FollowInputDTO): Promise<boolean> {
+    return await this.repository.unfollowUser(data)
   }
 
   async isFollowing (data: FollowInputDTO): Promise<boolean> {
     return await this.repository.isFollowing(data)
   }
 
-  async getFollowers (userId: string, options: OffsetPagination): Promise<string[]> {
+  async getFollowers (userId: string, options: OffsetPagination): Promise<UserDTO[]> {
     return await this.repository.getFollowers(userId, options)
   }
 
-  async getFollowing (userId: string, options: OffsetPagination): Promise<string[]> {
+  async getFollowing (userId: string, options: OffsetPagination): Promise<UserDTO[]> {
     return await this.repository.getFollowing(userId, options)
   }
 }

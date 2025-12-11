@@ -1,14 +1,15 @@
 import { FollowerServiceImpl } from '@domains/follower/service'
 import { FollowerRepository } from '@domains/follower/repository'
 import { FollowInputDTO, FollowDTO } from '@domains/follower/dto'
-import { ForbiddenException, ConflictException } from '@utils'
+import { ForbiddenException, ConflictException } from '../../../../utils/errors'
 import { OffsetPagination } from '@types'
+import { UserDTO } from '@domains/user/dto'
 
 describe('FollowerServiceImpl', () => {
   let repository: jest.Mocked<FollowerRepository>
   let service: FollowerServiceImpl
 
-  beforeEach(() => {
+  beforeAll(() => {
     // Mock the repository
     repository = {
       followUser: jest.fn(),
@@ -104,13 +105,18 @@ describe('FollowerServiceImpl', () => {
     it('should return list of following users', async () => {
       const userId = 'user-1'
       const options: OffsetPagination = { limit: 10, skip: 0 }
-      const followingIds = ['user-2', 'user-3', 'user-4']
 
-      repository.getFollowing.mockResolvedValue(followingIds)
+      const following: UserDTO[] = [
+        { id: 'user-2', name: 'name-1', createdAt: new Date(), isPublic: true },
+        { id: 'user-3', name: 'name-2', createdAt: new Date(), isPublic: true },
+        { id: 'user-4', name: 'name-3', createdAt: new Date(), isPublic: true }
+      ]
+
+      repository.getFollowing.mockResolvedValue(following)
 
       const result = await service.getFollowing(userId, options)
 
-      expect(result).toEqual(followingIds)
+      expect(result).toEqual(following)
       expect(repository.getFollowing).toHaveBeenCalledWith(userId, options)
     })
   })
@@ -119,13 +125,18 @@ describe('FollowerServiceImpl', () => {
     it('should return list of followers', async () => {
       const userId = 'user-1'
       const options: OffsetPagination = { limit: 10, skip: 0 }
-      const followerIds = ['user-5', 'user-6']
 
-      repository.getFollowers.mockResolvedValue(followerIds)
+      const followers: UserDTO[] = [
+        { id: 'user-2', name: 'name-1', createdAt: new Date(), isPublic: true },
+        { id: 'user-3', name: 'name-2', createdAt: new Date(), isPublic: true },
+        { id: 'user-4', name: 'name-3', createdAt: new Date(), isPublic: true }
+      ]
+
+      repository.getFollowers.mockResolvedValue(followers)
 
       const result = await service.getFollowers(userId, options)
 
-      expect(result).toEqual(followerIds)
+      expect(result).toEqual(followers)
       expect(repository.getFollowers).toHaveBeenCalledWith(userId, options)
     })
   })

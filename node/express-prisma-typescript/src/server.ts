@@ -7,7 +7,12 @@ import { Constants, NodeEnv, Logger } from '@utils'
 import { router } from './router'
 import { ErrorHandling } from './utils/errors'
 
+import swaggerUi from 'swagger-ui-express'
+import swaggerDocument from './utils/swagger'
+
 const app = express()
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
 // Set up request logger
 if (Constants.NODE_ENV === NodeEnv.DEV) {

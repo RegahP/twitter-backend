@@ -1,4 +1,4 @@
-export const PrismaClient = jest.fn().mockImplementation(() => ({
+/* export const PrismaClient = jest.fn().mockImplementation(() => ({
   user: {
     create: jest.fn(),
     findUnique: jest.fn(),
@@ -21,4 +21,4 @@ export const PrismaClient = jest.fn().mockImplementation(() => ({
   },
   $connect: jest.fn(),
   $disconnect: jest.fn()
-}))
+})) */

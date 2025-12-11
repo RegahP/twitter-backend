@@ -1,7 +1,8 @@
 import { FollowerRepository } from './follower.repository'
-import { PrismaClient, Follow } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import { OffsetPagination } from '@types'
 import { FollowDTO, FollowInputDTO } from '../dto'
+import { UserDTO } from '@domains/user/dto'
 
 export class FollowerRepositoryImpl implements FollowerRepository {
   constructor (private readonly db: PrismaClient) {}
@@ -11,13 +12,16 @@ export class FollowerRepositoryImpl implements FollowerRepository {
     return new FollowDTO(follow)
   }
 
-  async unfollowUser (data: FollowInputDTO): Promise<void> {
-    await this.db.follow.deleteMany({
+  async unfollowUser (data: FollowInputDTO): Promise<boolean> {
+    const unfollow = await this.db.follow.delete({
       where: {
-        followerId: data.followerId,
-        followedId: data.followedId
+        followerId_followedId: {
+          followerId: data.followerId,
+          followedId: data.followedId
+        }
       }
     })
+    return unfollow !== null
   }
 
   async isFollowing (data: FollowInputDTO): Promise<boolean> {
@@ -30,25 +34,25 @@ export class FollowerRepositoryImpl implements FollowerRepository {
     return follow !== null
   }
 
-  async getFollowers (userId: string, options: OffsetPagination): Promise<string[]> {
-    const followers: Follow[] = await this.db.follow.findMany({
-      where: {
-        followedId: userId
-      },
-      take: options.limit ? options.limit : undefined,
-      skip: options.skip ? options.skip : undefined
+  async getFollowers (userId: string, options: OffsetPagination): Promise<UserDTO[]> {
+    const followers = await this.db.follow.findMany({
+      where: { followedId: userId },
+      take: options.limit ?? undefined,
+      skip: options.skip ?? undefined,
+      orderBy: { id: 'asc' },
+      include: { follower: true }
     })
-    return followers.map(follow => follow.followerId)
+    return followers.map(f => new UserDTO(f.follower))
   }
 
-  async getFollowing (userId: string, options: OffsetPagination): Promise<string[]> {
-    const following: Follow[] = await this.db.follow.findMany({
-      where: {
-        followerId: userId
-      },
-      take: options.limit ? options.limit : undefined,
-      skip: options.skip ? options.skip : undefined
+  async getFollowing (userId: string, options: OffsetPagination): Promise<UserDTO[]> {
+    const following = await this.db.follow.findMany({
+      where: { followerId: userId },
+      take: options.limit ?? undefined,
+      skip: options.skip ?? undefined,
+      orderBy: { id: 'asc' },
+      include: { followed: true }
     })
-    return following.map(follow => follow.followedId)
+    return following.map(f => new UserDTO(f.followed))
   }
 }
