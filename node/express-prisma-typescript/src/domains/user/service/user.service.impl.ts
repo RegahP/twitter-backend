@@ -1,4 +1,4 @@
-import { NotFoundException } from '@utils/errors'
+import { NotFoundException } from 'utils/errors'
 import { OffsetPagination } from 'types'
 import { UserDTO } from '../dto'
 import { UserRepository } from '../repository'

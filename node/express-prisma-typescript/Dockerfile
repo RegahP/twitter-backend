@@ -1,5 +1,5 @@
 # Install dependencies
-FROM node:18-alpine AS deps
+FROM node:20-alpine AS deps
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ COPY yarn.lock ./
 RUN yarn install --frozen-lockfile
 
 # Build source code
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -20,7 +20,7 @@ RUN yarn db:generate
 RUN yarn build
 
 # Production runtime
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 
 WORKDIR /app
 
@@ -33,12 +33,12 @@ EXPOSE 8080
 CMD yarn prod
 
 # Development runtime
-FROM node:18-alpine AS dev
+FROM node:20-alpine AS dev
 
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/package.json ./
+COPY --from=deps /app/package.json ./   
 COPY nodemon.json ./nodemon.json
 COPY tsconfig.json ./tsconfig.json
 COPY . .

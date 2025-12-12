@@ -1,4 +1,4 @@
-import { User } from '@prisma/client'
+import { User } from 'generated/prisma/client'
 
 export class UserDTO {
   constructor (user: User) {
@@ -15,7 +15,7 @@ export class UserDTO {
 }
 
 export class ExtendedUserDTO extends UserDTO {
-  constructor (user: ExtendedUserDTO) {
+  constructor (user: User) {
     super(user)
     this.email = user.email
     this.name = user.name

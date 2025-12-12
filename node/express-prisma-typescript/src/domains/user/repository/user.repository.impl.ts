@@ -1,5 +1,5 @@
 import { SignupInputDTO } from '@domains/auth/dto'
-import { PrismaClient, User } from '@prisma/client'
+import { PrismaClient, User } from 'generated/prisma/client'
 import { OffsetPagination } from '@types'
 import { ExtendedUserDTO, UserDTO } from '../dto'
 import { UserRepository } from './user.repository'

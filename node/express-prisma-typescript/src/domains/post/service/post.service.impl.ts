@@ -6,6 +6,7 @@ import { ForbiddenException, NotFoundException } from '@utils'
 import { CursorPagination } from '@types'
 import { UserService } from '@domains/user/service'
 import { FollowerService } from '@domains/follower/service'
+import { UserDTO } from '@domains/user/dto'
 
 export class PostServiceImpl implements PostService {
   constructor (
@@ -39,9 +40,9 @@ export class PostServiceImpl implements PostService {
 
   async getLatestPosts (userId: string, options: CursorPagination): Promise<PostDTO[]> {
     const posts = await this.repository.getAllByDatePaginated(options)
-    const followingIds = await this.followerService.getFollowing(userId, options)
+    const followingList: UserDTO[] = await this.followerService.getFollowing(userId, options)
     const filteredPosts = posts.filter(post => {
-      return followingIds.includes(post.authorId)
+      return followingList.some(user => user.id === post.authorId)
     })
     return filteredPosts
   }

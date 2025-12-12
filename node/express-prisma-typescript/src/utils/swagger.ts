@@ -8,7 +8,7 @@ const options = {
       version: '1.0.0'
     }
   },
-  apis: ['./src/routes*.js'] // files containing annotations as above
+  apis: ['./src/router/*.ts'] // files containing annotations as above
 }
 
 export default swaggerJsdoc(options)

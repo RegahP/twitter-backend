@@ -5,7 +5,9 @@
 // The prisma-client-js is the default generator that builds ts types based on the db models.
 // You can find more about generators here: https://www.prisma.io/docs/concepts/components/prisma-schema/generators
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output = "../src/generated/prisma"
+  runtime = "nodejs"
 }
 
 // The datasource block specifies the url to your DBMS.
