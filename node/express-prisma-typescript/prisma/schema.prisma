@@ -32,6 +32,7 @@ model User {
   posts     Post[]
   follows   Follow[] @relation(name: "follows")
   followers Follow[] @relation(name: "followers")
+  reactions Reaction[] @relation(name: "user")
 
   isPublic  Boolean  @default(true)
 }
@@ -62,10 +63,28 @@ model Post {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime? // Optional value
 
-  /* parentId String? @db.Uuid
+  parentId String? @db.Uuid
   parent   Post?  @relation("comments", fields: [parentId], references: [id], onDelete: Cascade)
-  comments Post[] @relation("comments") */
-
+  comments Post[] @relation("comments")
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade) // One to many
+  reactions Reaction[] @relation(name: "post")
 
+}
+
+model Reaction {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid // Primary Key
+
+  userId String @db.Uuid()
+  postId String @db.Uuid()
+
+  type String @db.VarChar(20)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // Optional value
+
+  user User @relation("user", fields: [userId], references: [id], onDelete: Cascade) // One to many
+  post Post @relation("post", fields: [postId], references: [id], onDelete: Cascade) // One to many
+
+  @@unique([userId, postId, type])
 }
