@@ -1,5 +1,5 @@
 import { CursorPagination } from '@types'
-import { CreatePostInputDTO, PostDTO } from '../dto'
+import { CreatePostInputDTO, PostDTO, ReactionDTO, ReactionInputDTO } from '../dto'
 
 export interface PostRepository {
   create: (userId: string, data: CreatePostInputDTO) => Promise<PostDTO>
@@ -7,4 +7,7 @@ export interface PostRepository {
   delete: (postId: string) => Promise<void>
   getById: (postId: string) => Promise<PostDTO | null>
   getByAuthorId: (authorId: string) => Promise<PostDTO[]>
+  react: (userId: string, data: ReactionInputDTO) => Promise<ReactionDTO>
+  deleteReaction: (userId: string, data: ReactionInputDTO) => Promise<void>
+  getReaction: (userId: string, data: ReactionInputDTO) => Promise<ReactionDTO | null>
 }

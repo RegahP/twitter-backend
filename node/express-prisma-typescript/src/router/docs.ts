@@ -185,6 +185,26 @@
  *         createdAt:
  *           type: string
  *           format: date-time
+ *
+ *     Reaction:
+ *       type: object
+ *       required: [id, userId, postId, type, createdAt]
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: uuid
+ *         userId:
+ *           type: string
+ *           format: uuid
+ *         postId:
+ *           type: string
+ *           format: uuid
+ *         type:
+ *           type: string
+ *           enum: [like, retweet]
+ *         createdAt:
+ *           type: string
+ *           format: date-time
  */
 
 /**
@@ -734,6 +754,94 @@
  *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
  *         description: Private profile and not following
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ * /post/reaction/{postId}:
+ *   post:
+ *     summary: React to a post
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: query
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [like, retweet]
+ *     responses:
+ *       201:
+ *         description: Reaction created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Reaction'
+ *       400:
+ *         description: Invalid reaction type
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Missing/invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       409:
+ *         description: Duplicate reaction (unique by userId+postId+type)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   delete:
+ *     summary: Delete a reaction from a post
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: query
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [like, retweet]
+ *     responses:
+ *       200:
+ *         description: Deleted reaction
+ *         content:
+ *           text/plain:
+ *             schema:
+ *               type: string
+ *       400:
+ *         description: Invalid reaction type
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Missing/invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Reaction not found
  *         content:
  *           application/json:
  *             schema:

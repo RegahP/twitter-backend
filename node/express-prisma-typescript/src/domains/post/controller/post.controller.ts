@@ -3,11 +3,11 @@ import HttpStatus from 'http-status'
 // express-async-errors is a module that handles async errors in express, don't forget import it in your new controllers
 import 'express-async-errors'
 
-import { db, BodyValidation } from '@utils'
+import { db, BodyValidation, ValidationException } from '@utils'
 
 import { PostRepositoryImpl } from '../repository'
 import { PostService, PostServiceImpl } from '../service'
-import { CreatePostInputDTO } from '../dto'
+import { CreatePostInputDTO, ReactionInputDTO } from '../dto'
 import { UserServiceImpl } from '@domains/user/service'
 import { UserRepositoryImpl } from '@domains/user/repository'
 import { FollowerServiceImpl } from '@domains/follower/service'
@@ -48,7 +48,7 @@ postRouter.get('/by_user/:userId', async (req: Request, res: Response) => {
 
   return res.status(HttpStatus.OK).json(posts)
 })
-
+// this bodyvalidation is incorrectly validating the images property
 postRouter.post('/', BodyValidation(CreatePostInputDTO), async (req: Request, res: Response) => {
   const { userId } = res.locals.context
   const data = req.body
@@ -65,4 +65,31 @@ postRouter.delete('/:postId', async (req: Request, res: Response) => {
   await service.deletePost(userId, postId)
 
   return res.status(HttpStatus.OK).send(`Deleted post ${postId}`)
+})
+
+postRouter.post('/reaction/:postId/', async (req: Request, res: Response) => {
+  const { userId } = res.locals.context
+  const { postId } = req.params as { postId: string }
+  const { type } = req.query as { type?: string }
+
+  if (type !== 'like' && type !== 'retweet') {
+    throw new ValidationException([{ field: 'type', message: "type must be 'like' or 'retweet'" }])
+  }
+
+  const reaction = await service.reactToPost(userId, new ReactionInputDTO({ postId, type }))
+  return res.status(HttpStatus.CREATED).json(reaction)
+})
+
+postRouter.delete('/reaction/:postId/', async (req: Request, res: Response) => {
+  const { userId } = res.locals.context
+  const { postId } = req.params as { postId: string }
+  const { type } = req.query as { type?: string }
+
+  if (type !== 'like' && type !== 'retweet') {
+    throw new ValidationException([{ field: 'type', message: "type must be 'like' or 'retweet'" }])
+  }
+
+  await service.deleteReaction(userId, new ReactionInputDTO({ postId, type }))
+
+  return res.status(HttpStatus.OK).send(`Deleted ${type} on post ${postId}`)
 })

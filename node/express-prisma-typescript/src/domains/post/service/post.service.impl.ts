@@ -1,8 +1,8 @@
-import { CreatePostInputDTO, PostDTO } from '../dto'
+import { CreatePostInputDTO, PostDTO, ReactionDTO, ReactionInputDTO } from '../dto'
 import { PostRepository } from '../repository'
 import { PostService } from '.'
 import { validate } from 'class-validator'
-import { ForbiddenException, NotFoundException } from '@utils'
+import { ConflictException, ForbiddenException, NotFoundException } from '@utils'
 import { CursorPagination } from '@types'
 import { UserService } from '@domains/user/service'
 import { FollowerService } from '@domains/follower/service'
@@ -54,5 +54,24 @@ export class PostServiceImpl implements PostService {
       if (!isPublic) throw new ForbiddenException()
     }
     return await this.repository.getByAuthorId(authorId)
+  }
+
+  async reactToPost (userId: string, data: ReactionInputDTO): Promise<ReactionDTO> {
+    await validate(data)
+    const reaction = await this.repository.getReaction(userId, data)
+    if (reaction) {
+      throw new ConflictException(`${data.type.toUpperCase()}_REACTION_ALREADY_EXISTS`)
+    }
+    return await this.repository.react(userId, data)
+  }
+
+  async deleteReaction (userId: string, data: ReactionInputDTO): Promise<void> {
+    const post = await this.repository.getById(data.postId)
+    if (!post) throw new NotFoundException('post')
+    const reaction = await this.repository.getReaction(userId, data)
+    if (!reaction) {
+      throw new NotFoundException(`${data.type}`)
+    }
+    await this.repository.deleteReaction(userId, data)
   }
 }

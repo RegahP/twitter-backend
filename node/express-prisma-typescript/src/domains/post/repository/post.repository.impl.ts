@@ -1,7 +1,7 @@
 import { PrismaClient, Post } from 'generated/prisma/client'
 import { CursorPagination } from '@types'
 import { PostRepository } from '.'
-import { CreatePostInputDTO, PostDTO } from '../dto'
+import { CreatePostInputDTO, PostDTO, ReactionDTO, ReactionInputDTO } from '../dto'
 
 export class PostRepositoryImpl implements PostRepository {
   constructor (private readonly db: PrismaClient) {}
@@ -57,5 +57,41 @@ export class PostRepositoryImpl implements PostRepository {
       }
     })
     return posts.map(post => new PostDTO(post))
+  }
+
+  async react (userId: string, data: ReactionInputDTO): Promise<ReactionDTO> {
+    const reaction = await this.db.reaction.create({
+      data: {
+        userId,
+        postId: data.postId,
+        type: data.type
+      }
+    })
+    return new ReactionDTO({ ...reaction, type: reaction.type as 'like' | 'retweet' })
+  }
+
+  async deleteReaction (userId: string, data: ReactionInputDTO): Promise<void> {
+    await this.db.reaction.delete({
+      where: {
+        userId_postId_type: {
+          userId,
+          postId: data.postId,
+          type: data.type
+        }
+      }
+    })
+  }
+
+  async getReaction (userId: string, data: ReactionInputDTO): Promise<ReactionDTO | null> {
+    const reaction = await this.db.reaction.findUnique({
+      where: {
+        userId_postId_type: {
+          userId,
+          postId: data.postId,
+          type: data.type
+        }
+      }
+    })
+    return (reaction != null) ? new ReactionDTO({ ...reaction, type: reaction.type as 'like' | 'retweet' }) : null
   }
 }
