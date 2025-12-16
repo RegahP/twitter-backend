@@ -1,7 +1,7 @@
 import { PrismaClient, Post } from 'generated/prisma/client'
-import { CursorPagination } from '@types'
+import { CursorPagination, OffsetPagination } from '@types'
 import { PostRepository } from '.'
-import { CreatePostInputDTO, PostDTO, ReactionDTO, ReactionInputDTO } from '../dto'
+import { CreateCommentInputDTO, CommentDTO, CreatePostInputDTO, PostDTO } from '../dto'
 
 export class PostRepositoryImpl implements PostRepository {
   constructor (private readonly db: PrismaClient) {}
@@ -59,39 +59,28 @@ export class PostRepositoryImpl implements PostRepository {
     return posts.map(post => new PostDTO(post))
   }
 
-  async react (userId: string, data: ReactionInputDTO): Promise<ReactionDTO> {
-    const reaction = await this.db.reaction.create({
+  async createComment (userId: string, data: CreateCommentInputDTO): Promise<CommentDTO> {
+    const comment = await this.db.post.create({
       data: {
-        userId,
-        postId: data.postId,
-        type: data.type
+        authorId: userId,
+        ...data
       }
     })
-    return new ReactionDTO({ ...reaction, type: reaction.type as 'like' | 'retweet' })
+    return new CommentDTO(comment)
   }
 
-  async deleteReaction (userId: string, data: ReactionInputDTO): Promise<void> {
-    await this.db.reaction.delete({
+  async getCommentsByParentId (parentId: string, options: OffsetPagination): Promise<CommentDTO[]> {
+    const comments: Post[] = await this.db.post.findMany({
       where: {
-        userId_postId_type: {
-          userId,
-          postId: data.postId,
-          type: data.type
-        }
-      }
+        parentId
+      },
+      take: options.limit ?? undefined,
+      skip: options.skip ?? undefined,
+      orderBy: [
+        { createdAt: 'asc' },
+        { id: 'asc' }
+      ]
     })
-  }
-
-  async getReaction (userId: string, data: ReactionInputDTO): Promise<ReactionDTO | null> {
-    const reaction = await this.db.reaction.findUnique({
-      where: {
-        userId_postId_type: {
-          userId,
-          postId: data.postId,
-          type: data.type
-        }
-      }
-    })
-    return (reaction != null) ? new ReactionDTO({ ...reaction, type: reaction.type as 'like' | 'retweet' }) : null
+    return comments.map(comment => new CommentDTO(comment))
   }
 }

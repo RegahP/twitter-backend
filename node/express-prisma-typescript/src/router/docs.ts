@@ -9,6 +9,8 @@
  *     description: User profile and recommendations (requires auth)
  *   - name: Posts
  *     description: Create and read posts (requires auth)
+ *   - name: Reactions
+ *     description: Like/retweet reactions (requires auth)
  *   - name: Followers
  *     description: Follow relationships (requires auth)
  *   - name: Health
@@ -165,6 +167,42 @@
  *           items:
  *             type: string
  *           maxItems: 4
+ *
+ *     CreateCommentBody:
+ *       type: object
+ *       required: [content]
+ *       properties:
+ *         content:
+ *           type: string
+ *           maxLength: 240
+ *         images:
+ *           type: array
+ *           items:
+ *             type: string
+ *           maxItems: 4
+ *
+ *     Comment:
+ *       type: object
+ *       required: [id, parentId, authorId, content, images, createdAt]
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: uuid
+ *         parentId:
+ *           type: string
+ *           format: uuid
+ *         authorId:
+ *           type: string
+ *           format: uuid
+ *         content:
+ *           type: string
+ *         images:
+ *           type: array
+ *           items:
+ *             type: string
+ *         createdAt:
+ *           type: string
+ *           format: date-time
  *
  *     Post:
  *       type: object
@@ -759,10 +797,112 @@
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *
- * /post/reaction/{postId}:
+ * /post/{postId}/comment:
+ *   post:
+ *     summary: Create a comment on a post
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateCommentBody'
+ *     responses:
+ *       201:
+ *         description: Comment created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Comment'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Missing/invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Private profile and not following
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Post not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ * /post/{postId}/comments:
+ *   get:
+ *     summary: List comments for a post
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: skip
+ *         required: false
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Comments
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Comment'
+ *       401:
+ *         description: Missing/invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Private profile and not following
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Post not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ * /reaction/{postId}:
  *   post:
  *     summary: React to a post
- *     tags: [Posts]
+ *     tags: [Reactions]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -805,7 +945,7 @@
  *               $ref: '#/components/schemas/ErrorResponse'
  *   delete:
  *     summary: Delete a reaction from a post
- *     tags: [Posts]
+ *     tags: [Reactions]
  *     security:
  *       - bearerAuth: []
  *     parameters:

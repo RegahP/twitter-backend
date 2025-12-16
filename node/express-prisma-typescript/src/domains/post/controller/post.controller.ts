@@ -3,11 +3,11 @@ import HttpStatus from 'http-status'
 // express-async-errors is a module that handles async errors in express, don't forget import it in your new controllers
 import 'express-async-errors'
 
-import { db, BodyValidation, ValidationException } from '@utils'
+import { db, BodyValidation } from '@utils'
 
 import { PostRepositoryImpl } from '../repository'
 import { PostService, PostServiceImpl } from '../service'
-import { CreatePostInputDTO, ReactionInputDTO } from '../dto'
+import { CreatePostInputDTO, CreateCommentBodyDTO, CreateCommentInputDTO } from '../dto'
 import { UserServiceImpl } from '@domains/user/service'
 import { UserRepositoryImpl } from '@domains/user/repository'
 import { FollowerServiceImpl } from '@domains/follower/service'
@@ -67,29 +67,25 @@ postRouter.delete('/:postId', async (req: Request, res: Response) => {
   return res.status(HttpStatus.OK).send(`Deleted post ${postId}`)
 })
 
-postRouter.post('/reaction/:postId/', async (req: Request, res: Response) => {
+postRouter.post('/:postId/comment', BodyValidation(CreateCommentBodyDTO), async (req: Request, res: Response) => {
   const { userId } = res.locals.context
-  const { postId } = req.params as { postId: string }
-  const { type } = req.query as { type?: string }
+  const { postId } = req.params
+  const body = req.body as CreateCommentBodyDTO
 
-  if (type !== 'like' && type !== 'retweet') {
-    throw new ValidationException([{ field: 'type', message: "type must be 'like' or 'retweet'" }])
-  }
+  const comment = await service.createComment(userId, new CreateCommentInputDTO({
+    parentId: postId,
+    content: body.content,
+    images: body.images
+  }))
 
-  const reaction = await service.reactToPost(userId, new ReactionInputDTO({ postId, type }))
-  return res.status(HttpStatus.CREATED).json(reaction)
+  return res.status(HttpStatus.CREATED).json(comment)
 })
 
-postRouter.delete('/reaction/:postId/', async (req: Request, res: Response) => {
-  const { userId } = res.locals.context
-  const { postId } = req.params as { postId: string }
-  const { type } = req.query as { type?: string }
+postRouter.get('/:postId/comments', async (req: Request, res: Response) => {
+  const { postId } = req.params
+  const { limit, skip } = req.query as Record<string, string>
 
-  if (type !== 'like' && type !== 'retweet') {
-    throw new ValidationException([{ field: 'type', message: "type must be 'like' or 'retweet'" }])
-  }
+  const comments = await service.getComments(postId, { limit: Number(limit), skip: Number(skip) })
 
-  await service.deleteReaction(userId, new ReactionInputDTO({ postId, type }))
-
-  return res.status(HttpStatus.OK).send(`Deleted ${type} on post ${postId}`)
+  return res.status(HttpStatus.OK).json(comments)
 })

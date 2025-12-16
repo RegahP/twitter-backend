@@ -1,5 +1,6 @@
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator'
 import { ExtendedUserDTO } from '@domains/user/dto'
+import type { Post } from 'generated/prisma/client'
 
 export class CreatePostInputDTO {
   @IsString()
@@ -8,7 +9,7 @@ export class CreatePostInputDTO {
     content!: string
 
   @IsOptional()
-  @MaxLength(4)
+  @MaxLength(4) // this is individually limiting each string, not the array length
     images?: string[]
 }
 
@@ -43,28 +44,55 @@ export class ExtendedPostDTO extends PostDTO {
   qtyRetweets!: number
 }
 
-export class ReactionDTO {
-  constructor (reaction: ReactionDTO) {
-    this.id = reaction.id
-    this.userId = reaction.userId
-    this.postId = reaction.postId
-    this.type = reaction.type
-    this.createdAt = reaction.createdAt
+export class CreateCommentBodyDTO {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(240)
+    content!: string
+
+  @IsOptional()
+  @MaxLength(4)
+    images?: string[]
+}
+
+export class CreateCommentInputDTO {
+  constructor (data: CreateCommentInputDTO) {
+    this.parentId = data.parentId
+    this.content = data.content
+    this.images = data.images
+  }
+
+  @IsString()
+  @IsNotEmpty()
+    parentId!: string
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(240)
+    content!: string
+
+  @IsOptional()
+  @MaxLength(4)
+    images?: string[]
+}
+
+export class CommentDTO {
+  constructor (comment: Post) {
+    if (comment.parentId == null) {
+      throw new Error('CommentDTO requires a non-null parentId')
+    }
+    this.id = comment.id
+    this.parentId = comment.parentId
+    this.authorId = comment.authorId
+    this.content = comment.content
+    this.images = comment.images
+    this.createdAt = comment.createdAt
   }
 
   id: string
-  userId: string
-  postId: string
-  type: 'like' | 'retweet'
+  parentId: string
+  authorId: string
+  content: string
+  images: string[]
   createdAt: Date
-}
-
-export class ReactionInputDTO {
-  constructor (data: ReactionInputDTO) {
-    this.postId = data.postId
-    this.type = data.type
-  }
-
-  postId: string
-  type: 'like' | 'retweet'
 }
