@@ -107,9 +107,9 @@ describe('FollowerServiceImpl', () => {
       const options: OffsetPagination = { limit: 10, skip: 0 }
 
       const following: UserDTO[] = [
-        { id: 'user-2', name: 'name-1', createdAt: new Date(), isPublic: true },
-        { id: 'user-3', name: 'name-2', createdAt: new Date(), isPublic: true },
-        { id: 'user-4', name: 'name-3', createdAt: new Date(), isPublic: true }
+        { id: 'user-2', name: 'name-1', createdAt: new Date(), isPublic: true, profileImageUrl: null },
+        { id: 'user-3', name: 'name-2', createdAt: new Date(), isPublic: true, profileImageUrl: null },
+        { id: 'user-4', name: 'name-3', createdAt: new Date(), isPublic: true, profileImageUrl: null }
       ]
 
       repository.getFollowing.mockResolvedValue(following)
@@ -127,9 +127,9 @@ describe('FollowerServiceImpl', () => {
       const options: OffsetPagination = { limit: 10, skip: 0 }
 
       const followers: UserDTO[] = [
-        { id: 'user-2', name: 'name-1', createdAt: new Date(), isPublic: true },
-        { id: 'user-3', name: 'name-2', createdAt: new Date(), isPublic: true },
-        { id: 'user-4', name: 'name-3', createdAt: new Date(), isPublic: true }
+        { id: 'user-2', name: 'name-1', createdAt: new Date(), isPublic: true, profileImageUrl: null },
+        { id: 'user-3', name: 'name-2', createdAt: new Date(), isPublic: true, profileImageUrl: null },
+        { id: 'user-4', name: 'name-3', createdAt: new Date(), isPublic: true, profileImageUrl: null }
       ]
 
       repository.getFollowers.mockResolvedValue(followers)

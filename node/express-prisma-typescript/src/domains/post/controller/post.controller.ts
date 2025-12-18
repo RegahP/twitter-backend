@@ -3,11 +3,12 @@ import HttpStatus from 'http-status'
 // express-async-errors is a module that handles async errors in express, don't forget import it in your new controllers
 import 'express-async-errors'
 
-import { db, BodyValidation } from '@utils'
+import { assertAllowedImageContentType, assertUserPostImageKey, isHttpUrl, buildPostImageKey, createPresignedPutUrl, db, BodyValidation, ValidationException } from '@utils'
+import { randomUUID } from 'crypto'
 
 import { PostRepositoryImpl } from '../repository'
 import { PostService, PostServiceImpl } from '../service'
-import { CreatePostInputDTO, CreateCommentBodyDTO, CreateCommentInputDTO } from '../dto'
+import { CreatePostImageUploadUrlsDTO, CreatePostInputDTO, CreateCommentBodyDTO, CreateCommentInputDTO } from '../dto'
 import { UserServiceImpl } from '@domains/user/service'
 import { UserRepositoryImpl } from '@domains/user/repository'
 import { FollowerServiceImpl } from '@domains/follower/service'
@@ -23,7 +24,7 @@ const service: PostService = new PostServiceImpl(
 )
 
 postRouter.get('/', async (req: Request, res: Response) => {
-  const { userId } = res.locals.context
+  const { userId } = res.locals.context as { userId: string }
   const { limit, before, after } = req.query as Record<string, string>
 
   const posts = await service.getLatestPosts(userId, { limit: Number(limit), before, after })
@@ -31,27 +32,65 @@ postRouter.get('/', async (req: Request, res: Response) => {
   return res.status(HttpStatus.OK).json(posts)
 })
 
-postRouter.get('/:postId', async (req: Request, res: Response) => {
-  const { userId } = res.locals.context
-  const { postId } = req.params
+postRouter.post(
+  '/images/upload-urls',
+  BodyValidation(CreatePostImageUploadUrlsDTO),
+  async (req: Request, res: Response) => {
+    const { userId } = res.locals.context as { userId: string }
+    const { contentTypes } = req.body as CreatePostImageUploadUrlsDTO
 
-  const post = await service.getPost(userId, postId)
+    for (const contentType of contentTypes) {
+      try {
+        assertAllowedImageContentType(contentType)
+      } catch (err) {
+        throw new ValidationException([{ field: 'contentTypes', message: (err as Error).message }])
+      }
+    }
 
-  return res.status(HttpStatus.OK).json(post)
-})
+    const uploads = await Promise.all(
+      contentTypes.map(async contentType => {
+        const key = buildPostImageKey(userId, contentType, randomUUID())
+        return await createPresignedPutUrl({ key, contentType })
+      })
+    )
+
+    return res.status(HttpStatus.OK).json({ uploads })
+  }
+)
 
 postRouter.get('/by_user/:userId', async (req: Request, res: Response) => {
-  const { userId } = res.locals.context
+  const { userId } = res.locals.context as { userId: string }
   const { userId: authorId } = req.params
 
   const posts = await service.getPostsByAuthor(userId, authorId)
 
   return res.status(HttpStatus.OK).json(posts)
 })
+
+postRouter.get('/:postId', async (req: Request, res: Response) => {
+  const { userId } = res.locals.context as { userId: string }
+  const { postId } = req.params
+
+  const post = await service.getPost(userId, postId)
+
+  return res.status(HttpStatus.OK).json(post)
+})
 // this bodyvalidation is incorrectly validating the images property
 postRouter.post('/', BodyValidation(CreatePostInputDTO), async (req: Request, res: Response) => {
-  const { userId } = res.locals.context
-  const data = req.body
+  const { userId } = res.locals.context as { userId: string }
+  const data = req.body as CreatePostInputDTO
+
+  if (data.images != null) {
+    for (const image of data.images) {
+      if (!isHttpUrl(image)) {
+        try {
+          assertUserPostImageKey(userId, image)
+        } catch (err) {
+          throw new ValidationException([{ field: 'images', message: (err as Error).message }])
+        }
+      }
+    }
+  }
 
   const post = await service.createPost(userId, data)
 
@@ -59,7 +98,7 @@ postRouter.post('/', BodyValidation(CreatePostInputDTO), async (req: Request, re
 })
 
 postRouter.delete('/:postId', async (req: Request, res: Response) => {
-  const { userId } = res.locals.context
+  const { userId } = res.locals.context as { userId: string }
   const { postId } = req.params
 
   await service.deletePost(userId, postId)
@@ -68,9 +107,21 @@ postRouter.delete('/:postId', async (req: Request, res: Response) => {
 })
 
 postRouter.post('/:postId/comment', BodyValidation(CreateCommentBodyDTO), async (req: Request, res: Response) => {
-  const { userId } = res.locals.context
+  const { userId } = res.locals.context as { userId: string }
   const { postId } = req.params
   const body = req.body as CreateCommentBodyDTO
+
+  if (body.images != null) {
+    for (const image of body.images) {
+      if (!isHttpUrl(image)) {
+        try {
+          assertUserPostImageKey(userId, image)
+        } catch (err) {
+          throw new ValidationException([{ field: 'images', message: (err as Error).message }])
+        }
+      }
+    }
+  }
 
   const comment = await service.createComment(userId, new CreateCommentInputDTO({
     parentId: postId,

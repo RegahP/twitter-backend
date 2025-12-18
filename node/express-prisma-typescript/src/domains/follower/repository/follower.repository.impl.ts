@@ -2,7 +2,7 @@ import { FollowerRepository } from './follower.repository'
 import { OffsetPagination } from '@types'
 import { FollowDTO, FollowInputDTO } from '../dto'
 import { UserDTO } from '@domains/user/dto'
-import { PrismaClient } from '../../../generated/prisma/client'
+import { PrismaClient } from '@prisma/client'
 
 export class FollowerRepositoryImpl implements FollowerRepository {
   constructor (private readonly db: PrismaClient) {}

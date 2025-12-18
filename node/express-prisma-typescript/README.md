@@ -6,7 +6,7 @@ In this example you'll find an already setted up express server with some existi
 
 - Install [Git](https://git-scm.com/), [Docker](https://www.docker.com/), [Node v18](https://nodejs.org/en/download/), [Yarn](https://yarnpkg.com/) and [Direnv](https://direnv.net/)
 - Clone this repository
-- Create a copy of [.envrc template](./.envrc.template) into `.envrc`
+- Create a copy of [.envrc template](./.envrc.template) into `.envrc` (set `AWS_REGION` + `AWS_S3_BUCKET_NAME` + AWS credentials if you want to use S3 upload URLs)
 - Verify that you hooked [direnv into your shell](https://direnv.net/docs/hook.html)
 - Run:
   ```
@@ -111,6 +111,8 @@ Endpoints for getting user information
 
 - `GET api/user` returns recomended users paginated
 - `GET api/user/me` returns information about the logged user
+- `POST api/user/me/profile-image/upload-url` creates a pre-signed S3 PUT URL for uploading a profile image
+- `PATCH api/user/me/profile-image` commits the uploaded profile image key to the user
 - `GET api/user/:user_id` returns information about an user by id
 - `DELETE api/user` deletes the logged user
 
@@ -121,6 +123,7 @@ Endpoints for getting post information
 - `GET api/post` returns post feed paginated
 - `GET api/post/:post_id` returns a post by id
 - `GET api/post/by_user/:user_id` returns all user posts by id
+- `POST api/post/images/upload-urls` creates pre-signed S3 PUT URLs for uploading post images
 - `POST api/post` creates a post
 - `DELETE api/post/:post_id` deletes a post by id
 

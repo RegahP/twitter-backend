@@ -9,4 +9,6 @@ export interface UserRepository {
   getById: (userId: string) => Promise<UserDTO | null>
   getByEmailOrUsername: (email?: string, username?: string) => Promise<ExtendedUserDTO | null>
   isPublicProfile: (userId: string) => Promise<boolean>
+
+  setProfileImageKey: (userId: string, key: string | null) => Promise<UserDTO>
 }

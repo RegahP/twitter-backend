@@ -86,7 +86,7 @@
  *
  *     User:
  *       type: object
- *       required: [id, createdAt, isPublic]
+ *       required: [id, createdAt, isPublic, profileImageUrl]
  *       properties:
  *         id:
  *           type: string
@@ -99,11 +99,66 @@
  *           format: date-time
  *         isPublic:
  *           type: boolean
+ *         profileImageUrl:
+ *           type: string
+ *           nullable: true
+ *           description: Public URL for the user's profile image (derived from stored S3 key)
  *       example:
  *         id: d63e7746-f731-45a6-9479-30547ce3b113
  *         name: Jane Doe
  *         createdAt: 2025-12-12T00:00:00.000Z
  *         isPublic: true
+ *         profileImageUrl: https://your-bucket.s3.us-east-1.amazonaws.com/users/d63e7746-f731-45a6-9479-30547ce3b113/profile/abc.jpg
+
+ *     PresignedUpload:
+ *       type: object
+ *       required: [key, uploadUrl, publicUrl]
+ *       properties:
+ *         key:
+ *           type: string
+ *           description: S3 object key (store this in DB)
+ *         uploadUrl:
+ *           type: string
+ *           description: Pre-signed PUT URL to upload bytes directly to S3
+ *         publicUrl:
+ *           type: string
+ *           description: Stable public URL for reads (bucket is public)
+
+ *     CreateProfileImageUploadUrlInput:
+ *       type: object
+ *       required: [contentType]
+ *       properties:
+ *         contentType:
+ *           type: string
+ *           enum: [image/jpeg, image/png, image/webp]
+
+ *     SetProfileImageKeyInput:
+ *       type: object
+ *       required: [profileImageKey]
+ *       properties:
+ *         profileImageKey:
+ *           type: string
+ *           description: Must be a key returned from the upload-url endpoint
+
+ *     CreatePostImageUploadUrlsInput:
+ *       type: object
+ *       required: [contentTypes]
+ *       properties:
+ *         contentTypes:
+ *           type: array
+ *           maxItems: 4
+ *           items:
+ *             type: string
+ *             enum: [image/jpeg, image/png, image/webp]
+
+ *     PresignedUploadsResponse:
+ *       type: object
+ *       required: [uploads]
+ *       properties:
+ *         uploads:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/PresignedUpload'
  *
  *     Follow:
  *       type: object
@@ -166,6 +221,7 @@
  *           type: array
  *           items:
  *             type: string
+ *           description: S3 object keys (recommended) or public URLs
  *           maxItems: 4
  *
  *     CreateCommentBody:
@@ -395,6 +451,70 @@
  *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+
+ * /user/me/profile-image/upload-url:
+ *   post:
+ *     summary: Create a pre-signed upload URL for profile image
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateProfileImageUploadUrlInput'
+ *     responses:
+ *       200:
+ *         description: Upload URL + key
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PresignedUpload'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Missing/invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+
+ * /user/me/profile-image:
+ *   patch:
+ *     summary: Set current user's profile image key
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/SetProfileImageKeyInput'
+ *     responses:
+ *       200:
+ *         description: Updated user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Missing/invalid token
  *         content:
  *           application/json:
  *             schema:
@@ -673,6 +793,38 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Post'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Missing/invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ * /post/images/upload-urls:
+ *   post:
+ *     summary: Create pre-signed upload URLs for post images
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreatePostImageUploadUrlsInput'
+ *     responses:
+ *       200:
+ *         description: Upload URLs + keys
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PresignedUploadsResponse'
  *       400:
  *         description: Validation error
  *         content:

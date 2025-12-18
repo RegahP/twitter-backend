@@ -1,6 +1,7 @@
-import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator'
+import { ArrayMaxSize, IsArray, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator'
 import { ExtendedUserDTO } from '@domains/user/dto'
-import type { Post } from 'generated/prisma/client'
+import type { Post } from '@prisma/client'
+import { maybeToS3PublicUrl } from '@utils'
 
 export class CreatePostInputDTO {
   @IsString()
@@ -9,16 +10,18 @@ export class CreatePostInputDTO {
     content!: string
 
   @IsOptional()
-  @MaxLength(4) // this is individually limiting each string, not the array length
+  @IsArray()
+  @ArrayMaxSize(4)
+  @IsString({ each: true })
     images?: string[]
 }
 
 export class PostDTO {
-  constructor (post: PostDTO) {
+  constructor (post: Pick<Post, 'id' | 'authorId' | 'content' | 'images' | 'createdAt'>) {
     this.id = post.id
     this.authorId = post.authorId
     this.content = post.content
-    this.images = post.images
+    this.images = post.images.map(maybeToS3PublicUrl)
     this.createdAt = post.createdAt
   }
 
@@ -51,7 +54,9 @@ export class CreateCommentBodyDTO {
     content!: string
 
   @IsOptional()
-  @MaxLength(4)
+  @IsArray()
+  @ArrayMaxSize(4)
+  @IsString({ each: true })
     images?: string[]
 }
 
@@ -72,7 +77,9 @@ export class CreateCommentInputDTO {
     content!: string
 
   @IsOptional()
-  @MaxLength(4)
+  @IsArray()
+  @ArrayMaxSize(4)
+  @IsString({ each: true })
     images?: string[]
 }
 
@@ -85,7 +92,7 @@ export class CommentDTO {
     this.parentId = comment.parentId
     this.authorId = comment.authorId
     this.content = comment.content
-    this.images = comment.images
+    this.images = comment.images.map(maybeToS3PublicUrl)
     this.createdAt = comment.createdAt
   }
 
@@ -95,4 +102,11 @@ export class CommentDTO {
   content: string
   images: string[]
   createdAt: Date
+}
+
+export class CreatePostImageUploadUrlsDTO {
+  @IsArray()
+  @ArrayMaxSize(4)
+  @IsString({ each: true })
+    contentTypes!: string[]
 }

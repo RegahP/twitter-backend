@@ -1,5 +1,5 @@
 import { SignupInputDTO } from '@domains/auth/dto'
-import { PrismaClient, User } from 'generated/prisma/client'
+import { PrismaClient, User } from '@prisma/client'
 import { OffsetPagination } from '@types'
 import { ExtendedUserDTO, UserDTO } from '../dto'
 import { UserRepository } from './user.repository'
@@ -68,5 +68,13 @@ export class UserRepositoryImpl implements UserRepository {
       }
     })
     return user !== null ? user.isPublic : false
+  }
+
+  async setProfileImageKey (userId: string, key: string | null): Promise<UserDTO> {
+    const user = await this.db.user.update({
+      where: { id: userId },
+      data: { profileImageKey: key }
+    })
+    return new UserDTO(user)
   }
 }

@@ -27,7 +27,8 @@ describe('PostServiceImpl', () => {
       deleteUser: jest.fn(),
       getUser: jest.fn(),
       getUserRecommendations: jest.fn(),
-      isPublicProfile: jest.fn()
+      isPublicProfile: jest.fn(),
+      setProfileImageKey: jest.fn()
     }
 
     followerService = {
@@ -143,7 +144,7 @@ describe('PostServiceImpl', () => {
         { id: 'p3', authorId: 'a3', content: 'c3', images: [], createdAt: new Date() }
       ]
 
-      const following: UserDTO[] = [{ id: 'a2', name: 'user a2', createdAt: new Date(), isPublic: true }]
+      const following: UserDTO[] = [{ id: 'a2', name: 'user a2', createdAt: new Date(), isPublic: true, profileImageUrl: null }]
 
       repository.getAllByDatePaginated.mockResolvedValue(posts)
       followerService.getFollowing.mockResolvedValue(following)

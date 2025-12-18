@@ -1,0 +1,25 @@
+# Copy this file to .envrc and run: direnv allow
+# NOTE: Do NOT commit .envrc (it is gitignored).
+
+# Docker Compose Variables
+export POSTGRES_DB=app
+export POSTGRES_USER=postgres
+export POSTGRES_PASSWORD=password
+
+# used for local prisma commands
+export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}"
+
+# AWS credentials (for S3 presigned PUT URLs)
+# Prefer using a dedicated IAM user with minimal permissions.
+export AWS_ACCESS_KEY_ID="CHANGE_ME"
+export AWS_SECRET_ACCESS_KEY="CHANGE_ME"
+
+# Must match your bucket's region
+export AWS_REGION="us-east-1"
+
+# Public bucket used to serve images
+export AWS_S3_BUCKET_NAME="CHANGE_ME_BUCKET"
+
+# connects to the dockerized local postgres database
+DB_DOCKER_SERVICE="db"
+export DOCKER_DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_DOCKER_SERVICE}/${POSTGRES_DB}?connect_timeout=600"

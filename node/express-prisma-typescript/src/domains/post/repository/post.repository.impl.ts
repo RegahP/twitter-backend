@@ -1,4 +1,4 @@
-import { PrismaClient, Post } from 'generated/prisma/client'
+import { PrismaClient, Post } from '@prisma/client'
 import { CursorPagination, OffsetPagination } from '@types'
 import { PostRepository } from '.'
 import { CreateCommentInputDTO, CommentDTO, CreatePostInputDTO, PostDTO } from '../dto'

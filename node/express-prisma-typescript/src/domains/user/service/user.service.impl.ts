@@ -25,4 +25,8 @@ export class UserServiceImpl implements UserService {
   async isPublicProfile (userId: string): Promise<boolean> {
     return await this.repository.isPublicProfile(userId)
   }
+
+  async setProfileImageKey (userId: string, key: string | null): Promise<UserDTO> {
+    return await this.repository.setProfileImageKey(userId, key)
+  }
 }
