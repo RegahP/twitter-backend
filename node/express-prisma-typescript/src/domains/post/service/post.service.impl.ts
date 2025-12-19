@@ -29,7 +29,6 @@ export class PostServiceImpl implements PostService {
   async getPost (userId: string, postId: string): Promise<PostDTO> {
     const post = await this.repository.getById(postId)
     if (!post) throw new NotFoundException('post')
-    this.ex()
     const isFollowing = await this.followerService.isFollowing({ followerId: userId, followedId: post.authorId })
     if (!isFollowing) {
       const isPublic = await this.userService.isPublicProfile(post.authorId)
@@ -62,9 +61,5 @@ export class PostServiceImpl implements PostService {
     const post = await this.repository.getById(postId)
     if (!post) throw new NotFoundException('post')
     return await this.repository.getCommentsByParentId(postId, options)
-  }
-
-  private ex (): number {
-    return 42
   }
 }

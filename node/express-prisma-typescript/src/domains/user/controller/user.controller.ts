@@ -83,5 +83,5 @@ userRouter.delete('/', async (req: Request, res: Response) => {
 
   await service.deleteUser(userId)
 
-  return res.status(HttpStatus.OK)
+  return res.sendStatus(HttpStatus.OK)
 })
