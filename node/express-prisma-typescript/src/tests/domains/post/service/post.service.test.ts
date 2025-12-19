@@ -16,6 +16,7 @@ describe('PostServiceImpl', () => {
     repository = {
       create: jest.fn(),
       getAllByDatePaginated: jest.fn(),
+      getAllFollowedByDatePaginated: jest.fn(),
       delete: jest.fn(),
       getById: jest.fn(),
       getByAuthorId: jest.fn(),

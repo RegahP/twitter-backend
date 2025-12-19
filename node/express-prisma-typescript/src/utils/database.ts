@@ -9,6 +9,6 @@ if (!databaseUrl) {
 const connectionString = databaseUrl
 
 const adapter = new PrismaPg({ connectionString })
-const db = new PrismaClient({ adapter })
+const db = new PrismaClient({ adapter, log: ['query'] })
 
 export { db }

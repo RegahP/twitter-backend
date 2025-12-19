@@ -6,7 +6,6 @@ import { ForbiddenException, NotFoundException } from '@utils'
 import { CursorPagination, OffsetPagination } from '@types'
 import { UserService } from '@domains/user/service'
 import { FollowerService } from '@domains/follower/service'
-import { UserDTO } from '@domains/user/dto'
 
 export class PostServiceImpl implements PostService {
   constructor (
@@ -30,6 +29,7 @@ export class PostServiceImpl implements PostService {
   async getPost (userId: string, postId: string): Promise<PostDTO> {
     const post = await this.repository.getById(postId)
     if (!post) throw new NotFoundException('post')
+    this.ex()
     const isFollowing = await this.followerService.isFollowing({ followerId: userId, followedId: post.authorId })
     if (!isFollowing) {
       const isPublic = await this.userService.isPublicProfile(post.authorId)
@@ -39,12 +39,7 @@ export class PostServiceImpl implements PostService {
   }
 
   async getLatestPosts (userId: string, options: CursorPagination): Promise<PostDTO[]> {
-    const posts = await this.repository.getAllByDatePaginated(options)
-    const followingList: UserDTO[] = await this.followerService.getFollowing(userId, options)
-    const filteredPosts = posts.filter(post => {
-      return followingList.some(user => user.id === post.authorId)
-    })
-    return filteredPosts
+    return await this.repository.getAllFollowedByDatePaginated(userId, options)
   }
 
   async getPostsByAuthor (userId: any, authorId: string): Promise<PostDTO[]> {
@@ -67,5 +62,9 @@ export class PostServiceImpl implements PostService {
     const post = await this.repository.getById(postId)
     if (!post) throw new NotFoundException('post')
     return await this.repository.getCommentsByParentId(postId, options)
+  }
+
+  private ex (): number {
+    return 42
   }
 }

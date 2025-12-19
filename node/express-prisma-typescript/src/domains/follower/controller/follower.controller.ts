@@ -38,14 +38,12 @@ followerRouter.get('/is-following', async (req: Request<any, any, any, { followe
 
 followerRouter.get('/followers/:userId', async (req: Request, res: Response) => {
   const { userId } = req.params
-  const { limit, skip } = req.query as Record<string, string>
-  const followers = await followerService.getFollowers(userId, { limit: Number(limit), skip: Number(skip) })
+  const followers = await followerService.getFollowers(userId)
   res.status(HttpStatus.OK).json(followers)
 })
 
 followerRouter.get('/following/:userId', async (req: Request, res: Response) => {
   const { userId } = req.params
-  const { limit, skip } = req.query as Record<string, string>
-  const following = await followerService.getFollowing(userId, { limit: Number(limit), skip: Number(skip) })
+  const following = await followerService.getFollowing(userId)
   res.status(HttpStatus.OK).json(following)
 })

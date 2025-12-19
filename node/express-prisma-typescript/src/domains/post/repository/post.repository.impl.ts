@@ -33,6 +33,32 @@ export class PostRepositoryImpl implements PostRepository {
     return posts.map(post => new PostDTO(post))
   }
 
+  async getAllFollowedByDatePaginated (userId: string, options: CursorPagination): Promise<PostDTO[]> {
+    const posts: Post[] = await this.db.post.findMany({
+      where: {
+        author: {
+          followers: {
+            some: {
+              followerId: userId
+            }
+          }
+        }
+      },
+      cursor: options.after ? { id: options.after } : (options.before) ? { id: options.before } : undefined,
+      skip: options.after ?? options.before ? 1 : undefined,
+      take: options.limit ? (options.before ? -options.limit : options.limit) : undefined,
+      orderBy: [
+        {
+          createdAt: 'desc'
+        },
+        {
+          id: 'asc'
+        }
+      ]
+    })
+    return posts.map(post => new PostDTO(post))
+  }
+
   async delete (postId: string): Promise<void> {
     await this.db.post.delete({
       where: {

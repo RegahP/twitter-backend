@@ -114,7 +114,7 @@ describe('FollowerServiceImpl', () => {
 
       repository.getFollowing.mockResolvedValue(following)
 
-      const result = await service.getFollowing(userId, options)
+      const result = await service.getFollowing(userId)
 
       expect(result).toEqual(following)
       expect(repository.getFollowing).toHaveBeenCalledWith(userId, options)
@@ -134,7 +134,7 @@ describe('FollowerServiceImpl', () => {
 
       repository.getFollowers.mockResolvedValue(followers)
 
-      const result = await service.getFollowers(userId, options)
+      const result = await service.getFollowers(userId)
 
       expect(result).toEqual(followers)
       expect(repository.getFollowers).toHaveBeenCalledWith(userId, options)

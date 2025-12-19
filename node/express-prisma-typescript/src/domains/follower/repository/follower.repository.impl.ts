@@ -1,5 +1,4 @@
 import { FollowerRepository } from './follower.repository'
-import { OffsetPagination } from '@types'
 import { FollowDTO, FollowInputDTO } from '../dto'
 import { UserDTO } from '@domains/user/dto'
 import { PrismaClient } from '@prisma/client'
@@ -34,22 +33,18 @@ export class FollowerRepositoryImpl implements FollowerRepository {
     return follow !== null
   }
 
-  async getFollowers (userId: string, options: OffsetPagination): Promise<UserDTO[]> {
+  async getFollowers (userId: string): Promise<UserDTO[]> {
     const followers = await this.db.follow.findMany({
       where: { followedId: userId },
-      take: options.limit ?? undefined,
-      skip: options.skip ?? undefined,
       orderBy: { id: 'asc' },
       include: { follower: true }
     })
     return followers.map(f => new UserDTO(f.follower))
   }
 
-  async getFollowing (userId: string, options: OffsetPagination): Promise<UserDTO[]> {
+  async getFollowing (userId: string): Promise<UserDTO[]> {
     const following = await this.db.follow.findMany({
       where: { followerId: userId },
-      take: options.limit ?? undefined,
-      skip: options.skip ?? undefined,
       orderBy: { id: 'asc' },
       include: { followed: true }
     })

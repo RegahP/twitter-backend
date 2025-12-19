@@ -1,4 +1,3 @@
-import { OffsetPagination } from '@types'
 import { FollowerRepository } from '../repository'
 import { FollowerService } from './follower.service'
 import { FollowDTO, FollowInputDTO } from '../dto'
@@ -22,11 +21,11 @@ export class FollowerServiceImpl implements FollowerService {
     return await this.repository.isFollowing(data)
   }
 
-  async getFollowers (userId: string, options: OffsetPagination): Promise<UserDTO[]> {
-    return await this.repository.getFollowers(userId, options)
+  async getFollowers (userId: string): Promise<UserDTO[]> {
+    return await this.repository.getFollowers(userId)
   }
 
-  async getFollowing (userId: string, options: OffsetPagination): Promise<UserDTO[]> {
-    return await this.repository.getFollowing(userId, options)
+  async getFollowing (userId: string): Promise<UserDTO[]> {
+    return await this.repository.getFollowing(userId)
   }
 }
