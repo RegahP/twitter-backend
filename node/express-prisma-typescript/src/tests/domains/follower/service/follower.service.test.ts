@@ -2,7 +2,6 @@ import { FollowerServiceImpl } from '@domains/follower/service'
 import { FollowerRepository } from '@domains/follower/repository'
 import { FollowInputDTO, FollowDTO } from '@domains/follower/dto'
 import { ForbiddenException, ConflictException } from '../../../../utils/errors'
-import { OffsetPagination } from '@types'
 import { UserDTO } from '@domains/user/dto'
 
 describe('FollowerServiceImpl', () => {
@@ -104,7 +103,6 @@ describe('FollowerServiceImpl', () => {
   describe('getFollowing', () => {
     it('should return list of following users', async () => {
       const userId = 'user-1'
-      const options: OffsetPagination = { limit: 10, skip: 0 }
 
       const following: UserDTO[] = [
         { id: 'user-2', name: 'name-1', createdAt: new Date(), isPublic: true, profileImageUrl: null },
@@ -117,14 +115,13 @@ describe('FollowerServiceImpl', () => {
       const result = await service.getFollowing(userId)
 
       expect(result).toEqual(following)
-      expect(repository.getFollowing).toHaveBeenCalledWith(userId, options)
+      expect(repository.getFollowing).toHaveBeenCalledWith(userId)
     })
   })
 
   describe('getFollowers', () => {
     it('should return list of followers', async () => {
       const userId = 'user-1'
-      const options: OffsetPagination = { limit: 10, skip: 0 }
 
       const followers: UserDTO[] = [
         { id: 'user-2', name: 'name-1', createdAt: new Date(), isPublic: true, profileImageUrl: null },
@@ -137,7 +134,7 @@ describe('FollowerServiceImpl', () => {
       const result = await service.getFollowers(userId)
 
       expect(result).toEqual(followers)
-      expect(repository.getFollowers).toHaveBeenCalledWith(userId, options)
+      expect(repository.getFollowers).toHaveBeenCalledWith(userId)
     })
   })
 })

@@ -4,7 +4,6 @@ import { CreateCommentInputDTO, CreatePostInputDTO, PostDTO } from '@domains/pos
 import { UserService } from '@domains/user/service'
 import { FollowerService } from '@domains/follower/service'
 import { OffsetPagination } from '@types'
-import { UserDTO } from '@domains/user/dto'
 
 describe('PostServiceImpl', () => {
   let repository: jest.Mocked<PostRepository>
@@ -135,7 +134,7 @@ describe('PostServiceImpl', () => {
   })
 
   describe('getLatestPosts', () => {
-    it('should return only posts from followed users', async () => {
+    it('should return latest followed posts', async () => {
       const userId = 'user-1'
       const options = { limit: 10 }
 
@@ -145,16 +144,11 @@ describe('PostServiceImpl', () => {
         { id: 'p3', authorId: 'a3', content: 'c3', images: [], createdAt: new Date() }
       ]
 
-      const following: UserDTO[] = [{ id: 'a2', name: 'user a2', createdAt: new Date(), isPublic: true, profileImageUrl: null }]
-
-      repository.getAllByDatePaginated.mockResolvedValue(posts)
-      followerService.getFollowing.mockResolvedValue(following)
-
+      repository.getAllFollowedByDatePaginated.mockResolvedValue([posts[1]])
       const result = await service.getLatestPosts(userId, options)
 
       expect(result).toEqual([posts[1]])
-      expect(repository.getAllByDatePaginated).toHaveBeenCalledWith(options)
-      expect(followerService.getFollowing).toHaveBeenCalledWith(userId, options)
+      expect(repository.getAllFollowedByDatePaginated).toHaveBeenCalledWith(userId, options)
     })
   })
 
