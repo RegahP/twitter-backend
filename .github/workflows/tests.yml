@@ -13,6 +13,11 @@ jobs:
     permissions:
       contents: read
 
+    env:
+      # Prisma requires DATABASE_URL to be present for `prisma generate`,
+      # but it doesn't need to connect for client generation.
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres?schema=public
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,6 +31,9 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: yarn db:generate
 
       - name: Run tests
         run: yarn test
