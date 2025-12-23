@@ -6,7 +6,8 @@ const options = {
     info: {
       title: 'Twigger API Documentation',
       version: '1.0.0'
-    }
+    },
+    servers: [{ url: '/api' }]
   },
   apis: ['./src/router/*.ts'] // files containing annotations as above
 }
