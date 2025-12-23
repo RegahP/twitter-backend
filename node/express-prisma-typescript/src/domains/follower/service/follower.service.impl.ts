@@ -14,10 +14,13 @@ export class FollowerServiceImpl implements FollowerService {
   }
 
   async unfollowUser (data: FollowInputDTO): Promise<boolean> {
+    if (data.followerId === data.followedId) throw new ForbiddenException()
+    if (!(await this.repository.isFollowing(data))) throw new ConflictException('NOT_FOLLOWING')
     return await this.repository.unfollowUser(data)
   }
 
   async isFollowing (data: FollowInputDTO): Promise<boolean> {
+    if (data.followerId === data.followedId) throw new ForbiddenException()
     return await this.repository.isFollowing(data)
   }
 

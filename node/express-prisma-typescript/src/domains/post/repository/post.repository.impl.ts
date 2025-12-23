@@ -18,6 +18,9 @@ export class PostRepositoryImpl implements PostRepository {
 
   async getAllByDatePaginated (options: CursorPagination): Promise<PostDTO[]> {
     const posts: Post[] = await this.db.post.findMany({
+      where: {
+        parentId: null
+      },
       cursor: options.after ? { id: options.after } : (options.before) ? { id: options.before } : undefined,
       skip: options.after ?? options.before ? 1 : undefined,
       take: options.limit ? (options.before ? -options.limit : options.limit) : undefined,
@@ -36,6 +39,7 @@ export class PostRepositoryImpl implements PostRepository {
   async getAllFollowedByDatePaginated (userId: string, options: CursorPagination): Promise<PostDTO[]> {
     const posts: Post[] = await this.db.post.findMany({
       where: {
+        parentId: null,
         author: {
           followers: {
             some: {
@@ -100,8 +104,8 @@ export class PostRepositoryImpl implements PostRepository {
       where: {
         parentId
       },
-      take: options.limit ?? undefined,
-      skip: options.skip ?? undefined,
+      take: options.limit ?? 10,
+      skip: options.skip ?? 0,
       orderBy: [
         { createdAt: 'asc' },
         { id: 'asc' }

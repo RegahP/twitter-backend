@@ -14,8 +14,8 @@ export class UserServiceImpl implements UserService {
   }
 
   async getUserRecommendations (userId: any, options: OffsetPagination): Promise<UserDTO[]> {
-    // TODO: make this return only users followed by users the original user follows
-    return await this.repository.getRecommendedUsersPaginated(options)
+    const recommendations = await this.repository.getRecommendedUsersPaginated(options)
+    return recommendations.filter(user => user.id !== userId)
   }
 
   async deleteUser (userId: any): Promise<void> {

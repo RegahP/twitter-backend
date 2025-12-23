@@ -15,16 +15,16 @@ export const followerRouter = Router()
 const followerRepository = new FollowerRepositoryImpl(db)
 const followerService: FollowerService = new FollowerServiceImpl(followerRepository)
 
-followerRouter.post('/follow/:userId', async (req: Request, res: Response) => {
+followerRouter.post('/follow/:userId', async (req: Request<any, any, any, { followedId: string }>, res: Response) => {
   const { userId } = res.locals.context
-  const { followedId } = req.body
+  const { followedId } = req.query
   await followerService.followUser(new FollowInputDTO({ followerId: userId, followedId }))
   res.sendStatus(HttpStatus.OK)
 })
 
-followerRouter.post('/unfollow/:userId', async (req: Request, res: Response) => {
+followerRouter.post('/unfollow/:userId', async (req: Request<any, any, any, { followedId: string }>, res: Response) => {
   const { userId } = res.locals.context
-  const { followedId } = req.body
+  const { followedId } = req.query
   const unfollow = await followerService.unfollowUser(new FollowInputDTO({ followerId: userId, followedId }))
   res.status(HttpStatus.OK).json({ unfollow })
 })
