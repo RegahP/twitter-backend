@@ -3,7 +3,7 @@ import HttpStatus from 'http-status'
 // express-async-errors is a module that handles async errors in express, don't forget import it in your new controllers
 import 'express-async-errors'
 
-import { db } from '@utils'
+import { db, ValidationException } from '@utils'
 
 import { FollowerRepositoryImpl } from '../repository'
 import { FollowerService, FollowerServiceImpl } from '../service'
@@ -15,23 +15,32 @@ export const followerRouter = Router()
 const followerRepository = new FollowerRepositoryImpl(db)
 const followerService: FollowerService = new FollowerServiceImpl(followerRepository)
 
-followerRouter.post('/follow/:userId', async (req: Request<any, any, any, { followedId: string }>, res: Response) => {
+followerRouter.post('/follow/:followedId', async (req: Request<any, any, any, { followedId?: string }>, res: Response) => {
   const { userId } = res.locals.context
-  const { followedId } = req.query
+  const followedId = req.params.followedId
+  if (followedId == null) {
+    throw new ValidationException([{ field: 'followedId', message: 'followedId is required' }])
+  }
   await followerService.followUser(new FollowInputDTO({ followerId: userId, followedId }))
   res.sendStatus(HttpStatus.OK)
 })
 
-followerRouter.post('/unfollow/:userId', async (req: Request<any, any, any, { followedId: string }>, res: Response) => {
+followerRouter.post('/unfollow/:followedId', async (req: Request<any, any, any, { followedId?: string }>, res: Response) => {
   const { userId } = res.locals.context
-  const { followedId } = req.query
+  const followedId = req.params.followedId
+  if (followedId == null) {
+    throw new ValidationException([{ field: 'followedId', message: 'followedId is required' }])
+  }
   const unfollow = await followerService.unfollowUser(new FollowInputDTO({ followerId: userId, followedId }))
   res.status(HttpStatus.OK).json({ unfollow })
 })
 
-followerRouter.get('/is-following', async (req: Request<any, any, any, { followedId: string }>, res: Response) => {
+followerRouter.get('/is-following', async (req: Request<any, any, any, { followedId?: string }>, res: Response) => {
   const { userId }: { userId: string } = res.locals.context
-  const { followedId } = req.query
+  const followedId = req.query.followedId
+  if (!followedId) {
+    throw new ValidationException([{ field: 'followedId', message: 'followedId is required' }])
+  }
   const isFollowing = await followerService.isFollowing(new FollowInputDTO({ followerId: userId, followedId }))
   res.status(HttpStatus.OK).json({ isFollowing })
 })

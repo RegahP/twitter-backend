@@ -556,7 +556,7 @@
 
 /**
  * @swagger
- * /follower/follow/{userId}:
+ * /follower/follow/{followedId}:
  *   post:
  *     summary: Follow a user
  *     tags: [Followers]
@@ -564,17 +564,19 @@
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: userId
+ *         name: followedId
  *         required: true
  *         schema:
  *           type: string
- *           description: Present in route but not used by handler
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/FollowActionInput'
+ *           format: uuid
+ *           description: ID of the user to follow
+ *       - in: query
+ *         name: followedId
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Deprecated; use the path param instead
  *     responses:
  *       200:
  *         description: Followed
@@ -597,7 +599,7 @@
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *
- * /follower/unfollow/{userId}:
+ * /follower/unfollow/{followedId}:
  *   post:
  *     summary: Unfollow a user
  *     tags: [Followers]
@@ -605,17 +607,19 @@
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: userId
+ *         name: followedId
  *         required: true
  *         schema:
  *           type: string
- *           description: Present in route but not used by handler
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/FollowActionInput'
+ *           format: uuid
+ *           description: ID of the user to unfollow
+ *       - in: query
+ *         name: followedId
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Deprecated; use the path param instead
  *     responses:
  *       200:
  *         description: Unfollow result
@@ -625,6 +629,18 @@
  *               $ref: '#/components/schemas/UnfollowResponse'
  *       401:
  *         description: Missing/invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Cannot unfollow yourself
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       409:
+ *         description: Not following
  *         content:
  *           application/json:
  *             schema:
@@ -656,6 +672,12 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Cannot check following status for yourself
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *
  * /follower/followers/{userId}:
  *   get:
@@ -670,16 +692,6 @@
  *         schema:
  *           type: string
  *           format: uuid
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *         required: false
- *       - in: query
- *         name: skip
- *         schema:
- *           type: integer
- *         required: false
  *     responses:
  *       200:
  *         description: Followers
@@ -709,16 +721,6 @@
  *         schema:
  *           type: string
  *           format: uuid
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *         required: false
- *       - in: query
- *         name: skip
- *         schema:
- *           type: integer
- *         required: false
  *     responses:
  *       200:
  *         description: Following
