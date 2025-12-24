@@ -112,6 +112,12 @@
 
  *     PresignedUpload:
  *       type: object
+ *       description: |
+ *         Returned by the API for direct-to-S3 uploads.
+ *
+ *         Upload flow:
+ *         1) `PUT` the raw image bytes to `uploadUrl` (this goes to S3, not this API).
+ *         2) Use the returned `key` in a follow-up API call (e.g. create post, set profile image).
  *       required: [key, uploadUrl, publicUrl]
  *       properties:
  *         key:
@@ -119,10 +125,14 @@
  *           description: S3 object key (store this in DB)
  *         uploadUrl:
  *           type: string
- *           description: Pre-signed PUT URL to upload bytes directly to S3
+ *           description: Pre-signed `PUT` URL to upload bytes directly to S3 (send `Content-Type` matching the requested contentType)
  *         publicUrl:
  *           type: string
  *           description: Stable public URL for reads (bucket is public)
+ *       example:
+ *         key: users/USER_ID/profile/OBJECT_ID.png
+ *         uploadUrl: https://your-bucket.s3.us-east-1.amazonaws.com/users/USER_ID/profile/OBJECT_ID.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Signature=...
+ *         publicUrl: https://your-bucket.s3.us-east-1.amazonaws.com/users/USER_ID/profile/OBJECT_ID.png
 
  *     CreateProfileImageUploadUrlInput:
  *       type: object
@@ -221,7 +231,15 @@
  *           type: array
  *           items:
  *             type: string
- *           description: S3 object keys (recommended) or public URLs
+ *           description: |
+ *             Post image references.
+ *
+ *             Recommended flow:
+ *             1) `POST /post/images/upload-urls` to get `uploads[].key` and `uploads[].uploadUrl`
+ *             2) `PUT uploads[].uploadUrl` with binary image bytes
+ *             3) Use `uploads[].key` values here
+ *
+ *             Also accepted: full http(s) URLs.
  *           maxItems: 4
  *
  *     CreateCommentBody:
@@ -235,6 +253,7 @@
  *           type: array
  *           items:
  *             type: string
+ *           description: S3 object keys (recommended) or full http(s) URLs
  *           maxItems: 4
  *
  *     Comment:
@@ -462,6 +481,18 @@
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
+ *     description: |
+ *       Direct-to-S3 upload flow:
+ *       1) Call this endpoint to get `{ key, uploadUrl, publicUrl }`.
+ *       2) Upload the image bytes to S3 using the returned `uploadUrl` (not an API endpoint):
+ *
+ *          `PUT {uploadUrl}`
+ *          Header: `Content-Type: <same contentType you requested>`
+ *          Body: raw binary image bytes
+ *
+ *       3) Commit the key to the user's profile via `PATCH /user/me/profile-image` with `{ profileImageKey: key }`.
+ *
+ *       Note: Swagger UI can't automatically "chain" step (2) from the response. Copy `uploadUrl` into curl/Postman to perform the PUT.
  *     requestBody:
  *       required: true
  *       content:
@@ -814,6 +845,13 @@
  *     tags: [Posts]
  *     security:
  *       - bearerAuth: []
+ *     description: |
+ *       Direct-to-S3 upload flow:
+ *       1) Call this endpoint with the image `contentTypes` to get `uploads[]`.
+ *       2) For each item in `uploads`, upload the raw bytes to S3 using `PUT uploadUrl`.
+ *       3) Create the post via `POST /post` using `images: [key1, key2, ...]`.
+ *
+ *       Note: the `uploadUrl` targets S3 and is time-limited; it is not an API endpoint.
  *     requestBody:
  *       required: true
  *       content:
