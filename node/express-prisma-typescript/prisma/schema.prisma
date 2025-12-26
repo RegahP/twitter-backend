@@ -65,8 +65,13 @@ model Post {
   deletedAt DateTime? // Optional value
 
   parentId String? @db.Uuid
+  rootId   String? @db.Uuid @unique
+
   parent   Post?  @relation("comments", fields: [parentId], references: [id], onDelete: Cascade)
+  root     Post?  @relation("root", fields: [rootId], references: [id], onDelete: Cascade)
+  
   comments Post[] @relation("comments")
+  rootPost Post?  @relation("root")
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade) // One to many
   reactions Reaction[] @relation(name: "post")
 

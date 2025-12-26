@@ -63,6 +63,7 @@ export class CreateCommentBodyDTO {
 export class CreateCommentInputDTO {
   constructor (data: CreateCommentInputDTO) {
     this.parentId = data.parentId
+    this.rootId = data.rootId
     this.content = data.content
     this.images = data.images
   }
@@ -70,6 +71,10 @@ export class CreateCommentInputDTO {
   @IsString()
   @IsNotEmpty()
     parentId!: string
+
+  @IsString()
+  @IsNotEmpty()
+    rootId!: string
 
   @IsString()
   @IsNotEmpty()
@@ -85,11 +90,12 @@ export class CreateCommentInputDTO {
 
 export class CommentDTO {
   constructor (comment: Post) {
-    if (comment.parentId == null) {
-      throw new Error('CommentDTO requires a non-null parentId')
+    if (comment.parentId == null || comment.rootId == null) {
+      throw new Error('CommentDTO requires a non-null parentId and rootId')
     }
     this.id = comment.id
     this.parentId = comment.parentId
+    this.rootId = comment.rootId
     this.authorId = comment.authorId
     this.content = comment.content
     this.images = comment.images.map(maybeToS3PublicUrl)
@@ -98,6 +104,7 @@ export class CommentDTO {
 
   id: string
   parentId: string
+  rootId: string
   authorId: string
   content: string
   images: string[]

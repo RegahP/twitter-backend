@@ -62,4 +62,20 @@ export class PostServiceImpl implements PostService {
     if (!post) throw new NotFoundException('post')
     return await this.repository.getCommentsByParentId(postId, options)
   }
+
+  async countCommentsByRootId (rootId: string): Promise<number> {
+    return await this.repository.countCommentsByRootId(rootId)
+  }
+
+  async countCommentsByParentId (parentId: string): Promise<number> {
+    return await this.repository.countCommentsByParentId(parentId)
+  }
+
+  async getCommentRootId (postId: string): Promise<string> {
+    const post: PostDTO | CommentDTO | null = await this.repository.getById(postId)
+    if (post == null) throw new NotFoundException('post')
+    return post instanceof CommentDTO ? post.rootId : post.id
+  }
+  // no necesito buscar el rootId escalando recursivamente porque si cada post tiene su rootId como su parentId
+  // entonces todos los rootIds son identicos en la cadena de comentarios
 }

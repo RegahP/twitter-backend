@@ -75,7 +75,7 @@ postRouter.get('/:postId', async (req: Request, res: Response) => {
 
   return res.status(HttpStatus.OK).json(post)
 })
-// this bodyvalidation is incorrectly validating the images property
+
 postRouter.post('/', BodyValidation(CreatePostInputDTO), async (req: Request, res: Response) => {
   const { userId } = res.locals.context as { userId: string }
   const data = req.body as CreatePostInputDTO
@@ -123,8 +123,11 @@ postRouter.post('/:postId/comment', BodyValidation(CreateCommentBodyDTO), async 
     }
   }
 
+  const rootId = await service.getCommentRootId(postId)
+
   const comment = await service.createComment(userId, new CreateCommentInputDTO({
     parentId: postId,
+    rootId,
     content: body.content,
     images: body.images
   }))
@@ -139,4 +142,18 @@ postRouter.get('/:postId/comments', async (req: Request, res: Response) => {
   const comments = await service.getComments(postId, { limit: Number(limit), skip: Number(skip) })
 
   return res.status(HttpStatus.OK).json(comments)
+})
+
+postRouter.get('/:postId/comment_count_parent', async (req: Request, res: Response) => {
+  const { postId } = req.params
+  const count = await service.countCommentsByParentId(postId)
+
+  return res.status(HttpStatus.OK).json({ count })
+})
+
+postRouter.get('/:postId/comment_count_root', async (req: Request, res: Response) => {
+  const { postId } = req.params
+  const count = await service.countCommentsByRootId(postId)
+
+  return res.status(HttpStatus.OK).json({ count })
 })

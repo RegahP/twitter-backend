@@ -71,13 +71,14 @@ export class PostRepositoryImpl implements PostRepository {
     })
   }
 
-  async getById (postId: string): Promise<PostDTO | null> {
+  async getById (postId: string): Promise<PostDTO | CommentDTO | null> {
     const post: Post | null = await this.db.post.findUnique({
       where: {
         id: postId
       }
     })
-    return (post != null) ? new PostDTO(post) : null
+    if (post == null) return null
+    return post.parentId == null ? new PostDTO(post) : new CommentDTO(post)
   }
 
   async getByAuthorId (authorId: string): Promise<PostDTO[]> {
@@ -97,6 +98,22 @@ export class PostRepositoryImpl implements PostRepository {
       }
     })
     return new CommentDTO(comment)
+  }
+
+  async countCommentsByRootId (rootId: string): Promise<number> {
+    return await this.db.post.count({
+      where: {
+        rootId
+      }
+    })
+  }
+
+  async countCommentsByParentId (parentId: string): Promise<number> {
+    return await this.db.post.count({
+      where: {
+        parentId
+      }
+    })
   }
 
   async getCommentsByParentId (parentId: string, options: OffsetPagination): Promise<CommentDTO[]> {

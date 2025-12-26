@@ -20,6 +20,8 @@ describe('PostServiceImpl', () => {
       getById: jest.fn(),
       getByAuthorId: jest.fn(),
       createComment: jest.fn(),
+      countCommentsByRootId: jest.fn(),
+      countCommentsByParentId: jest.fn(),
       getCommentsByParentId: jest.fn()
     }
 

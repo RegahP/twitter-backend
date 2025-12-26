@@ -9,4 +9,7 @@ export interface PostService {
   getPostsByAuthor: (userId: any, authorId: string) => Promise<PostDTO[]>
   createComment: (userId: string, data: CreateCommentInputDTO) => Promise<CommentDTO>
   getComments: (postId: string, options: OffsetPagination) => Promise<CommentDTO[]>
+  countCommentsByRootId: (rootId: string) => Promise<number>
+  countCommentsByParentId: (parentId: string) => Promise<number>
+  getCommentRootId: (postId: string) => Promise<string>
 }
