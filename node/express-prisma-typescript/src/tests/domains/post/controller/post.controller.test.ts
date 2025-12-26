@@ -89,9 +89,12 @@ describe('Post Controller (happy paths)', () => {
   })
 
   it('POST /:postId/comment should return 201 + comment', async () => {
-    jest.spyOn(PostServiceImpl.prototype, 'createComment').mockResolvedValue({
+    jest.spyOn(PostServiceImpl.prototype, 'getCommentRootId').mockResolvedValue('root-1')
+
+    const createCommentSpy = jest.spyOn(PostServiceImpl.prototype, 'createComment').mockResolvedValue({
       id: 'c1',
       parentId: 'p1',
+      rootId: 'root-1',
       authorId: 'user-1',
       content: 'comment',
       images: [],
@@ -102,6 +105,12 @@ describe('Post Controller (happy paths)', () => {
     const res = await request(app).post('/p1/comment').send({ content: 'comment' }).expect(201)
 
     expect(res.body.parentId).toBe('p1')
+    expect(res.body.rootId).toBe('root-1')
+    expect(PostServiceImpl.prototype.getCommentRootId).toHaveBeenCalledWith('p1')
+    expect(createCommentSpy).toHaveBeenCalledWith(
+      'user-1',
+      expect.objectContaining({ parentId: 'p1', rootId: 'root-1', content: 'comment' })
+    )
   })
 
   it('GET /:postId/comments should return 200 + comments', async () => {
@@ -114,5 +123,23 @@ describe('Post Controller (happy paths)', () => {
     const app = createAuthedApp()
     const res = await request(app).get('/p1/comments?limit=10&skip=0').expect(200)
     expect(res.body[0].parentId).toBe('p1')
+  })
+
+  it('GET /:postId/comment_count_parent should return 200 + count', async () => {
+    jest.spyOn(PostServiceImpl.prototype, 'countCommentsByParentId').mockResolvedValue(5)
+
+    const app = createAuthedApp()
+    const res = await request(app).get('/p1/comment_count_parent').expect(200)
+
+    expect(res.body).toEqual({ count: 5 })
+  })
+
+  it('GET /:postId/comment_count_root should return 200 + count', async () => {
+    jest.spyOn(PostServiceImpl.prototype, 'countCommentsByRootId').mockResolvedValue(9)
+
+    const app = createAuthedApp()
+    const res = await request(app).get('/p1/comment_count_root').expect(200)
+
+    expect(res.body).toEqual({ count: 9 })
   })
 })

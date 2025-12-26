@@ -1,6 +1,6 @@
 import { PostServiceImpl } from '@domains/post/service'
 import { PostRepository } from '@domains/post/repository'
-import { CreateCommentInputDTO, CreatePostInputDTO, PostDTO } from '@domains/post/dto'
+import { CommentDTO, CreateCommentInputDTO, CreatePostInputDTO, PostDTO } from '@domains/post/dto'
 import { UserService } from '@domains/user/service'
 import { FollowerService } from '@domains/follower/service'
 import { OffsetPagination } from '@types'
@@ -175,6 +175,7 @@ describe('PostServiceImpl', () => {
     it('should create a comment when parent post exists', async () => {
       const userId = 'user-1'
       const parentId = 'post-1'
+      const rootId = parentId
 
       const parentPost: PostDTO = {
         id: parentId,
@@ -184,7 +185,7 @@ describe('PostServiceImpl', () => {
         createdAt: new Date()
       }
 
-      const data = new CreateCommentInputDTO({ parentId, content: 'comment' } as any)
+      const data = new CreateCommentInputDTO({ parentId, rootId, content: 'comment' } as any)
       const created = {
         id: 'comment-1',
         parentId,
@@ -202,6 +203,59 @@ describe('PostServiceImpl', () => {
       expect(result).toEqual(created)
       expect(repository.getById).toHaveBeenCalledWith(parentId)
       expect(repository.createComment).toHaveBeenCalledWith(userId, data)
+    })
+  })
+
+  describe('countCommentsByRootId', () => {
+    it('should return count by rootId', async () => {
+      repository.countCommentsByRootId.mockResolvedValue(12)
+
+      const result = await service.countCommentsByRootId('root-1')
+
+      expect(result).toBe(12)
+      expect(repository.countCommentsByRootId).toHaveBeenCalledWith('root-1')
+    })
+  })
+
+  describe('countCommentsByParentId', () => {
+    it('should return count by parentId', async () => {
+      repository.countCommentsByParentId.mockResolvedValue(4)
+
+      const result = await service.countCommentsByParentId('parent-1')
+
+      expect(result).toBe(4)
+      expect(repository.countCommentsByParentId).toHaveBeenCalledWith('parent-1')
+    })
+  })
+
+  describe('getCommentRootId', () => {
+    it('should return post.id when post is not a comment', async () => {
+      const post: PostDTO = { id: 'p1', authorId: 'a1', content: 'c', images: [], createdAt: new Date() }
+      repository.getById.mockResolvedValue(post)
+
+      const result = await service.getCommentRootId('p1')
+
+      expect(result).toBe('p1')
+      expect(repository.getById).toHaveBeenCalledWith('p1')
+    })
+
+    it('should return comment.rootId when post is a comment', async () => {
+      const comment = new CommentDTO({
+        id: 'c1',
+        parentId: 'p1',
+        rootId: 'r1',
+        authorId: 'a1',
+        content: 'comment',
+        images: [],
+        createdAt: new Date()
+      } as any)
+
+      repository.getById.mockResolvedValue(comment)
+
+      const result = await service.getCommentRootId('c1')
+
+      expect(result).toBe('r1')
+      expect(repository.getById).toHaveBeenCalledWith('c1')
     })
   })
 
