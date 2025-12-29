@@ -28,6 +28,10 @@ export const PrismaClient = jest.fn().mockImplementation(() => ({
     findFirst: jest.fn(),
     delete: jest.fn()
   },
+  chatMessage: {
+    create: jest.fn(),
+    findMany: jest.fn()
+  },
   $connect: jest.fn(),
   $disconnect: jest.fn()
 }))

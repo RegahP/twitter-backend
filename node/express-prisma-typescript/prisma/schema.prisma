@@ -32,10 +32,32 @@ model User {
   followers Follow[] @relation(name: "followers")
   reactions Reaction[] @relation(name: "user")
 
+  sentMessages     ChatMessage[] @relation("chat_from")
+  receivedMessages ChatMessage[] @relation("chat_to")
+
   isPublic  Boolean  @default(true)
 
   // S3 object key for the user's profile image (public bucket)
   profileImageKey String?
+}
+
+model ChatMessage {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  roomId String @db.VarChar(200)
+
+  fromUserId String @db.Uuid
+  toUserId   String @db.Uuid
+
+  content String @db.VarChar(2000)
+
+  createdAt DateTime @default(now())
+
+  fromUser User @relation("chat_from", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser   User @relation("chat_to", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt])
+  @@index([fromUserId, toUserId, createdAt])
 }
 
 model Follow {

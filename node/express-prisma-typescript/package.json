@@ -33,6 +33,7 @@
     "method-override": "^3.0.0",
     "morgan": "^1.10.0",
     "signale": "^1.4.0",
+    "socket.io": "^4.8.3",
     "swagger-express-ts": "^1.1.0",
     "swagger-ui-express": "^5.0.1"
   },

@@ -258,12 +258,15 @@
  *
  *     Comment:
  *       type: object
- *       required: [id, parentId, authorId, content, images, createdAt]
+ *       required: [id, parentId, rootId, authorId, content, images, createdAt]
  *       properties:
  *         id:
  *           type: string
  *           format: uuid
  *         parentId:
+ *           type: string
+ *           format: uuid
+ *         rootId:
  *           type: string
  *           format: uuid
  *         authorId:
@@ -995,6 +998,12 @@
  *     tags: [Posts]
  *     security:
  *       - bearerAuth: []
+ *     description: |
+ *       Creates a comment for the given parent post/comment.
+ *
+ *       Notes:
+ *       - The API computes the `rootId` internally; clients do not send it.
+ *       - The response includes `rootId` so clients can count/query without recursion.
  *     parameters:
  *       - in: path
  *         name: postId
@@ -1086,6 +1095,71 @@
  *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Post not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+
+ * /post/{postId}/comment_count_parent:
+ *   get:
+ *     summary: Count direct child comments for a post/comment
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Count
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [count]
+ *               properties:
+ *                 count:
+ *                   type: integer
+ *       401:
+ *         description: Missing/invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+
+ * /post/{postId}/comment_count_root:
+ *   get:
+ *     summary: Count comments by rootId
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     description: |
+ *       Counts all comments that share `rootId = postId`.
+ *       This is intended to be used with a root post id.
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Count
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [count]
+ *               properties:
+ *                 count:
+ *                   type: integer
+ *       401:
+ *         description: Missing/invalid token
  *         content:
  *           application/json:
  *             schema:
