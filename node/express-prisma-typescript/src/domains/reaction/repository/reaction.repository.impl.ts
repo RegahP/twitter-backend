@@ -40,4 +40,47 @@ export class ReactionRepositoryImpl implements ReactionRepository {
     })
     return (reaction != null) ? new ReactionDTO({ ...reaction, type: reaction.type as 'like' | 'retweet' }) : null
   }
+
+  async countLikes (postId: string): Promise<number> {
+    const count = await this.db.reaction.count({
+      where: {
+        postId,
+        type: 'like'
+      }
+    })
+    return count
+  }
+
+  async countRetweets (postId: string): Promise<number> {
+    const count = await this.db.reaction.count({
+      where: {
+        postId,
+        type: 'retweet'
+      }
+    })
+    return count
+  }
+
+  async countReactionsByPostIds (postIds: string[]): Promise<{ likes: Record<string, number>, retweets: Record<string, number> }> {
+    if (postIds.length === 0) return { likes: {}, retweets: {} }
+
+    const grouped = await this.db.reaction.groupBy({
+      by: ['postId', 'type'],
+      where: {
+        postId: { in: postIds },
+        type: { in: ['like', 'retweet'] }
+      },
+      _count: { _all: true }
+    })
+
+    const likes: Record<string, number> = {}
+    const retweets: Record<string, number> = {}
+
+    for (const row of grouped) {
+      if (row.type === 'like') likes[row.postId] = row._count._all
+      if (row.type === 'retweet') retweets[row.postId] = row._count._all
+    }
+
+    return { likes, retweets }
+  }
 }

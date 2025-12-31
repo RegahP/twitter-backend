@@ -47,7 +47,7 @@ describe('PostRepositoryImpl (happy paths)', () => {
 
     const result = await repo.countCommentsByRootId('root-1')
 
-    expect(db.post.count).toHaveBeenCalledWith({ where: { rootId: 'root-1' } })
+    expect(db.post.count).toHaveBeenCalledWith({ where: { rootId: 'root-1', parentId: { not: null } } })
     expect(result).toBe(7)
   })
 

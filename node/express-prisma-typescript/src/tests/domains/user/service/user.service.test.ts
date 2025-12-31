@@ -9,6 +9,9 @@ describe('UserServiceImpl (happy paths)', () => {
     repository = {
       create: jest.fn(),
       getById: jest.fn(),
+      getByIdView: jest.fn(),
+      getByIdExtended: jest.fn(),
+      getByIdsExtended: jest.fn(),
       delete: jest.fn(),
       getRecommendedUsersPaginated: jest.fn(),
       getByEmailOrUsername: jest.fn(),
@@ -20,17 +23,20 @@ describe('UserServiceImpl (happy paths)', () => {
   })
 
   it('getUser should return user', async () => {
-    repository.getById.mockResolvedValue({
-      id: 'u1',
-      name: 'name',
-      createdAt: new Date(),
-      isPublic: true,
-      profileImageUrl: null
-    } as any)
+    repository.getByIdView.mockResolvedValue({ id: 'u1' } as any)
 
     const result = await service.getUser('u1')
     expect(result.id).toBe('u1')
-    expect(repository.getById).toHaveBeenCalledWith('u1')
+    expect(repository.getByIdView).toHaveBeenCalledWith('u1')
+  })
+
+  it('getUsersExtended should return users', async () => {
+    repository.getByIdsExtended.mockResolvedValue([{ id: 'u1' }, { id: 'u2' }] as any)
+
+    const result = await service.getUsersExtended(['u1', 'u2'])
+
+    expect(result).toHaveLength(2)
+    expect(repository.getByIdsExtended).toHaveBeenCalledWith(['u1', 'u2'])
   })
 
   it('getUserRecommendations should return users', async () => {

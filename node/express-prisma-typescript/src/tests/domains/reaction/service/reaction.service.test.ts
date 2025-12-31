@@ -13,7 +13,10 @@ describe('ReactionServiceImpl', () => {
     reactionRepository = {
       react: jest.fn(),
       deleteReaction: jest.fn(),
-      getReaction: jest.fn()
+      getReaction: jest.fn(),
+      countLikes: jest.fn(),
+      countRetweets: jest.fn(),
+      countReactionsByPostIds: jest.fn()
     }
 
     postRepository = {
@@ -25,6 +28,7 @@ describe('ReactionServiceImpl', () => {
       getByAuthorId: jest.fn(),
       createComment: jest.fn(),
       countCommentsByRootId: jest.fn(),
+      countCommentsByRootIds: jest.fn(),
       countCommentsByParentId: jest.fn(),
       getCommentsByParentId: jest.fn()
     }

@@ -3,12 +3,14 @@ import { PostRepository } from '@domains/post/repository'
 import { CommentDTO, CreateCommentInputDTO, CreatePostInputDTO, PostDTO } from '@domains/post/dto'
 import { UserService } from '@domains/user/service'
 import { FollowerService } from '@domains/follower/service'
+import { ReactionService } from '@domains/reaction/service'
 import { OffsetPagination } from '@types'
 
 describe('PostServiceImpl', () => {
   let repository: jest.Mocked<PostRepository>
   let userService: jest.Mocked<UserService>
   let followerService: jest.Mocked<FollowerService>
+  let reactionService: jest.Mocked<ReactionService>
   let service: PostServiceImpl
 
   beforeAll(() => {
@@ -21,6 +23,7 @@ describe('PostServiceImpl', () => {
       getByAuthorId: jest.fn(),
       createComment: jest.fn(),
       countCommentsByRootId: jest.fn(),
+      countCommentsByRootIds: jest.fn(),
       countCommentsByParentId: jest.fn(),
       getCommentsByParentId: jest.fn()
     }
@@ -29,6 +32,8 @@ describe('PostServiceImpl', () => {
       deleteUser: jest.fn(),
       getUser: jest.fn(),
       getUserRecommendations: jest.fn(),
+      getUserExtended: jest.fn(),
+      getUsersExtended: jest.fn(),
       isPublicProfile: jest.fn(),
       setProfileImageKey: jest.fn()
     }
@@ -41,7 +46,15 @@ describe('PostServiceImpl', () => {
       getFollowing: jest.fn()
     }
 
-    service = new PostServiceImpl(repository, userService, followerService)
+    reactionService = {
+      reactToPost: jest.fn(),
+      deleteReaction: jest.fn(),
+      countLikes: jest.fn(),
+      countRetweets: jest.fn(),
+      countReactionsByPostIds: jest.fn()
+    }
+
+    service = new PostServiceImpl(repository, userService, followerService, reactionService)
   })
 
   describe('createPost', () => {
@@ -140,17 +153,28 @@ describe('PostServiceImpl', () => {
       const userId = 'user-1'
       const options = { limit: 10 }
 
-      const posts: PostDTO[] = [
-        { id: 'p1', authorId: 'a1', content: 'c1', images: [], createdAt: new Date() },
-        { id: 'p2', authorId: 'a2', content: 'c2', images: [], createdAt: new Date() },
-        { id: 'p3', authorId: 'a3', content: 'c3', images: [], createdAt: new Date() }
-      ]
+      const post: PostDTO = { id: 'p2', authorId: 'a2', content: 'c2', images: [], createdAt: new Date() }
 
-      repository.getAllFollowedByDatePaginated.mockResolvedValue([posts[1]])
+      repository.getAllFollowedByDatePaginated.mockResolvedValue([post])
+      userService.getUsersExtended.mockResolvedValue([{ id: 'a2' } as any])
+      repository.countCommentsByRootIds.mockResolvedValue({ p2: 7 })
+      reactionService.countReactionsByPostIds.mockResolvedValue({ likes: { p2: 3 }, retweets: { p2: 1 } })
+
       const result = await service.getLatestPosts(userId, options)
 
-      expect(result).toEqual([posts[1]])
       expect(repository.getAllFollowedByDatePaginated).toHaveBeenCalledWith(userId, options)
+      expect(userService.getUsersExtended).toHaveBeenCalledWith(['a2'])
+      expect(repository.countCommentsByRootIds).toHaveBeenCalledWith(['p2'])
+      expect(reactionService.countReactionsByPostIds).toHaveBeenCalledWith(['p2'])
+
+      expect(result).toHaveLength(1)
+      expect(result[0]).toMatchObject({
+        id: 'p2',
+        authorId: 'a2',
+        qtyComments: 7,
+        qtyLikes: 3,
+        qtyRetweets: 1
+      })
     })
   })
 
@@ -163,9 +187,14 @@ describe('PostServiceImpl', () => {
       followerService.isFollowing.mockResolvedValue(true)
       repository.getByAuthorId.mockResolvedValue(posts)
 
+      userService.getUserExtended.mockResolvedValue({ id: authorId } as any)
+      repository.countCommentsByRootIds.mockResolvedValue({ p1: 2 })
+      reactionService.countReactionsByPostIds.mockResolvedValue({ likes: { p1: 1 }, retweets: { p1: 0 } })
+
       const result = await service.getPostsByAuthor(userId, authorId)
 
-      expect(result).toEqual(posts)
+      expect(result).toHaveLength(1)
+      expect(result[0]).toMatchObject({ id: 'p1', authorId, qtyComments: 2, qtyLikes: 1, qtyRetweets: 0 })
       expect(followerService.isFollowing).toHaveBeenCalledWith({ followerId: userId, followedId: authorId })
       expect(repository.getByAuthorId).toHaveBeenCalledWith(authorId)
     })

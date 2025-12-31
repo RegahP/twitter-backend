@@ -19,6 +19,7 @@ export const PrismaClient = jest.fn().mockImplementation(() => ({
     findUnique: jest.fn(),
     findMany: jest.fn(),
     count: jest.fn(),
+    groupBy: jest.fn(),
     update: jest.fn(),
     delete: jest.fn()
   },
@@ -26,6 +27,8 @@ export const PrismaClient = jest.fn().mockImplementation(() => ({
     create: jest.fn(),
     findUnique: jest.fn(),
     findFirst: jest.fn(),
+    groupBy: jest.fn(),
+    count: jest.fn(),
     delete: jest.fn()
   },
   chatMessage: {

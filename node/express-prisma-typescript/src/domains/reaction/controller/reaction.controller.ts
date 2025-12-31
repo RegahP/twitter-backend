@@ -28,6 +28,18 @@ reactionRouter.post('/:postId/', async (req: Request, res: Response) => {
   return res.status(HttpStatus.CREATED).json(reaction)
 })
 
+reactionRouter.get('/like_count/:postId/', async (req: Request, res: Response) => {
+  const { postId } = req.params as { postId: string }
+  const count = await service.countLikes(postId)
+  return res.status(HttpStatus.OK).json({ likes: count })
+})
+
+reactionRouter.get('/retweet_count/:postId/', async (req: Request, res: Response) => {
+  const { postId } = req.params as { postId: string }
+  const count = await service.countRetweets(postId)
+  return res.status(HttpStatus.OK).json({ retweets: count })
+})
+
 reactionRouter.delete('/:postId/', async (req: Request, res: Response) => {
   const { userId } = res.locals.context
   const { postId } = req.params as { postId: string }

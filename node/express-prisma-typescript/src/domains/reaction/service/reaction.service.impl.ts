@@ -31,4 +31,16 @@ export class ReactionServiceImpl implements ReactionService {
     }
     await this.reactionRepository.deleteReaction(userId, data)
   }
+
+  async countLikes (postId: string): Promise<number> {
+    return await this.reactionRepository.countLikes(postId)
+  }
+
+  async countRetweets (postId: string): Promise<number> {
+    return await this.reactionRepository.countRetweets(postId)
+  }
+
+  async countReactionsByPostIds (postIds: string[]): Promise<{ likes: Record<string, number>, retweets: Record<string, number> }> {
+    return await this.reactionRepository.countReactionsByPostIds(postIds)
+  }
 }

@@ -11,6 +11,9 @@ describe('AuthServiceImpl (happy paths)', () => {
     repository = {
       create: jest.fn(),
       getById: jest.fn(),
+      getByIdView: jest.fn(),
+      getByIdExtended: jest.fn(),
+      getByIdsExtended: jest.fn(),
       delete: jest.fn(),
       getRecommendedUsersPaginated: jest.fn(),
       getByEmailOrUsername: jest.fn(),
