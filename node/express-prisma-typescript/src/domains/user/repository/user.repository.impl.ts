@@ -1,7 +1,7 @@
 import { SignupInputDTO } from '@domains/auth/dto'
 import { PrismaClient, User } from '@prisma/client'
 import { OffsetPagination } from '@types'
-import { ExtendedUserDTO, UserDTO } from '../dto'
+import { ExtendedUserDTO, UserDTO, UserViewDTO } from '../dto'
 import { UserRepository } from './user.repository'
 
 export class UserRepositoryImpl implements UserRepository {
@@ -21,6 +21,37 @@ export class UserRepositoryImpl implements UserRepository {
     return user !== null ? new UserDTO(user) : null
   }
 
+  async getByIdView (userId: string): Promise<UserViewDTO | null> {
+    const user = await this.db.user.findUnique({
+      where: {
+        id: userId
+      }
+    })
+    return user !== null ? new UserViewDTO(user) : null
+  }
+
+  async getByIdExtended (userId: string): Promise<ExtendedUserDTO | null> {
+    const user = await this.db.user.findUnique({
+      where: {
+        id: userId
+      }
+    })
+    return user !== null ? new ExtendedUserDTO(user) : null
+  }
+
+  async getByIdsExtended (userIds: string[]): Promise<ExtendedUserDTO[]> {
+    if (userIds.length === 0) return []
+
+    const users: User[] = await this.db.user.findMany({
+      where: {
+        id: { in: userIds }
+      },
+      orderBy: [{ id: 'asc' }]
+    })
+
+    return users.map(u => new ExtendedUserDTO(u))
+  }
+
   async delete (userId: string): Promise<void> {
     await this.db.user.delete({
       where: {
@@ -29,7 +60,7 @@ export class UserRepositoryImpl implements UserRepository {
     })
   }
 
-  async getRecommendedUsersPaginated (options: OffsetPagination): Promise<UserDTO[]> {
+  async getRecommendedUsersPaginated (options: OffsetPagination): Promise<UserViewDTO[]> {
     const users: User[] = await this.db.user.findMany({
       take: options.limit ? options.limit : undefined,
       skip: options.skip ? options.skip : undefined,
@@ -39,7 +70,7 @@ export class UserRepositoryImpl implements UserRepository {
         }
       ]
     })
-    return users.map(user => new UserDTO(user))
+    return users.map(user => new UserViewDTO(user))
   }
 
   async getByEmailOrUsername (email?: string, username?: string): Promise<ExtendedUserDTO | null> {

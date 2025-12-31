@@ -31,11 +31,11 @@ export class ExtendedUserDTO extends UserDTO {
   password!: string
 }
 export class UserViewDTO {
-  constructor (user: UserViewDTO) {
+  constructor (user: User) {
     this.id = user.id
-    this.name = user.name
+    this.name = user.name ?? 'Unknown'
     this.username = user.username
-    this.profilePicture = user.profilePicture
+    this.profilePicture = user.profileImageKey != null ? buildS3PublicUrl(user.profileImageKey) : null
   }
 
   id: string

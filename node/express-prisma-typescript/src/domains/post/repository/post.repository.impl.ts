@@ -103,9 +103,29 @@ export class PostRepositoryImpl implements PostRepository {
   async countCommentsByRootId (rootId: string): Promise<number> {
     return await this.db.post.count({
       where: {
-        rootId
+        rootId,
+        parentId: { not: null }
       }
     })
+  }
+
+  async countCommentsByRootIds (rootIds: string[]): Promise<Record<string, number>> {
+    if (rootIds.length === 0) return {}
+
+    const grouped = await this.db.post.groupBy({
+      by: ['rootId'],
+      where: {
+        rootId: { in: rootIds },
+        parentId: { not: null }
+      },
+      _count: { _all: true }
+    })
+
+    const counts: Record<string, number> = {}
+    for (const row of grouped) {
+      if (row.rootId != null) counts[row.rootId] = row._count._all
+    }
+    return counts
   }
 
   async countCommentsByParentId (parentId: string): Promise<number> {

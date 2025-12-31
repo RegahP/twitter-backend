@@ -10,6 +10,7 @@ export interface PostRepository {
   getByAuthorId: (authorId: string) => Promise<PostDTO[]>
   createComment: (userId: string, data: CreateCommentInputDTO) => Promise<CommentDTO>
   countCommentsByRootId: (rootId: string) => Promise<number>
+  countCommentsByRootIds: (rootIds: string[]) => Promise<Record<string, number>>
   countCommentsByParentId: (parentId: string) => Promise<number>
   getCommentsByParentId: (parentId: string, options: OffsetPagination) => Promise<CommentDTO[]>
 }

@@ -13,14 +13,18 @@ import { UserServiceImpl } from '@domains/user/service'
 import { UserRepositoryImpl } from '@domains/user/repository'
 import { FollowerServiceImpl } from '@domains/follower/service'
 import { FollowerRepositoryImpl } from '@domains/follower/repository'
+import { ReactionServiceImpl } from '@domains/reaction/service'
+import { ReactionRepositoryImpl } from '@domains/reaction/repository'
 
 export const postRouter = Router()
 
 // Use dependency injection
+const postRepository = new PostRepositoryImpl(db)
 const service: PostService = new PostServiceImpl(
-  new PostRepositoryImpl(db),
+  postRepository,
   new UserServiceImpl(new UserRepositoryImpl(db)),
-  new FollowerServiceImpl(new FollowerRepositoryImpl(db))
+  new FollowerServiceImpl(new FollowerRepositoryImpl(db)),
+  new ReactionServiceImpl(new ReactionRepositoryImpl(db), postRepository)
 )
 
 postRouter.get('/', async (req: Request, res: Response) => {

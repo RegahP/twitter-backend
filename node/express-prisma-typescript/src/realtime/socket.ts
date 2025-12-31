@@ -10,7 +10,7 @@ import { FollowerRepositoryImpl } from '@domains/follower/repository'
 import type { ChatJoinInput, ChatSendMessageInput } from '@domains/chat/dto'
 
 const getTokenFromSocket = (socket: any): string | null => {
-  const authToken = socket.handshake?.auth?.token
+  const authToken = socket.handshake?.headers?.token
   if (typeof authToken === 'string' && authToken.length > 0) return authToken
 
   const header = socket.handshake?.headers?.authorization
@@ -36,13 +36,17 @@ export const attachSocketServer = (server: http.Server): Server => {
 
   io.use((socket, next) => {
     const token = getTokenFromSocket(socket)
-    if (!token) return next(new UnauthorizedException('MISSING_TOKEN'))
+    if (!token) {
+      next(new UnauthorizedException('MISSING_TOKEN'))
+      return
+    }
 
     try {
       const context = jwt.verify(token, Constants.TOKEN_SECRET) as any
       const userId = context?.userId
       if (typeof userId !== 'string' || userId.length === 0) {
-        return next(new UnauthorizedException('INVALID_TOKEN'))
+        next(new UnauthorizedException('INVALID_TOKEN'))
+        return
       }
 
       socket.data.userId = userId

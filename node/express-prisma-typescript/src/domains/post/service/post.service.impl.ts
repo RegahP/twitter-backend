@@ -1,4 +1,4 @@
-import { CommentDTO, CreateCommentInputDTO, CreatePostInputDTO, PostDTO } from '../dto'
+import { CommentDTO, CreateCommentInputDTO, CreatePostInputDTO, ExtendedPostDTO, PostDTO } from '../dto'
 import { PostRepository } from '../repository'
 import { PostService } from '.'
 import { validate } from 'class-validator'
@@ -6,12 +6,14 @@ import { ForbiddenException, NotFoundException } from '@utils'
 import { CursorPagination, OffsetPagination } from '@types'
 import { UserService } from '@domains/user/service'
 import { FollowerService } from '@domains/follower/service'
+import { ReactionService } from '@domains/reaction/service'
 
 export class PostServiceImpl implements PostService {
   constructor (
     private readonly repository: PostRepository,
     private readonly userService: UserService,
-    private readonly followerService: FollowerService
+    private readonly followerService: FollowerService,
+    private readonly reactionService: ReactionService
   ) {}
 
   async createPost (userId: string, data: CreatePostInputDTO): Promise<PostDTO> {
@@ -37,17 +39,59 @@ export class PostServiceImpl implements PostService {
     return post
   }
 
-  async getLatestPosts (userId: string, options: CursorPagination): Promise<PostDTO[]> {
-    return await this.repository.getAllFollowedByDatePaginated(userId, options)
+  async getLatestPosts (userId: string, options: CursorPagination): Promise<ExtendedPostDTO[]> {
+    const latestPosts = await this.repository.getAllFollowedByDatePaginated(userId, options)
+    if (latestPosts.length === 0) return []
+
+    const postIds = latestPosts.map(p => p.id)
+    const authorIds = Array.from(new Set(latestPosts.map(p => p.authorId)))
+
+    const [authors, commentsByRootId, reactionCounts] = await Promise.all([
+      this.userService.getUsersExtended(authorIds),
+      this.repository.countCommentsByRootIds(postIds),
+      this.reactionService.countReactionsByPostIds(postIds)
+    ])
+
+    const authorsById = new Map(authors.map(a => [a.id, a]))
+
+    return latestPosts.map(post => {
+      const author = authorsById.get(post.authorId)
+      if (author == null) throw new NotFoundException('user')
+
+      return new ExtendedPostDTO(
+        post,
+        author,
+        commentsByRootId[post.id] ?? 0,
+        reactionCounts.likes[post.id] ?? 0,
+        reactionCounts.retweets[post.id] ?? 0
+      )
+    })
   }
 
-  async getPostsByAuthor (userId: any, authorId: string): Promise<PostDTO[]> {
+  async getPostsByAuthor (userId: any, authorId: string): Promise<ExtendedPostDTO[]> {
     const isFollowing = await this.followerService.isFollowing({ followerId: userId, followedId: authorId })
     if (!isFollowing) {
       const isPublic = await this.userService.isPublicProfile(authorId)
       if (!isPublic) throw new ForbiddenException()
     }
-    return await this.repository.getByAuthorId(authorId)
+    const posts = await this.repository.getByAuthorId(authorId)
+    if (posts.length === 0) return []
+
+    const postIds = posts.map(p => p.id)
+
+    const [author, commentsByRootId, reactionCounts] = await Promise.all([
+      this.userService.getUserExtended(authorId),
+      this.repository.countCommentsByRootIds(postIds),
+      this.reactionService.countReactionsByPostIds(postIds)
+    ])
+
+    return posts.map(post => new ExtendedPostDTO(
+      post,
+      author,
+      commentsByRootId[post.id] ?? 0,
+      reactionCounts.likes[post.id] ?? 0,
+      reactionCounts.retweets[post.id] ?? 0
+    ))
   }
 
   async createComment (userId: string, data: CreateCommentInputDTO): Promise<CommentDTO> {
@@ -76,6 +120,4 @@ export class PostServiceImpl implements PostService {
     if (post == null) throw new NotFoundException('post')
     return post instanceof CommentDTO ? post.rootId : post.id
   }
-  // no necesito buscar el rootId escalando recursivamente porque si cada post tiene su rootId como su parentId
-  // entonces todos los rootIds son identicos en la cadena de comentarios
 }
