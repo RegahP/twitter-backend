@@ -22,6 +22,12 @@ export class ReactionServiceImpl implements ReactionService {
     return await this.reactionRepository.react(userId, data)
   }
 
+  async getReaction (userId: string, postId: string, type: 'like' | 'retweet'): Promise<ReactionDTO | null> {
+    const post = await this.postRepository.getById(postId)
+    if (!post) throw new NotFoundException('post')
+    return await this.reactionRepository.getReaction(userId, new ReactionInputDTO({ postId, type }))
+  }
+
   async deleteReaction (userId: string, data: ReactionInputDTO): Promise<void> {
     const post = await this.postRepository.getById(data.postId)
     if (!post) throw new NotFoundException('post')

@@ -48,6 +48,7 @@ describe('PostServiceImpl', () => {
 
     reactionService = {
       reactToPost: jest.fn(),
+      getReaction: jest.fn(),
       deleteReaction: jest.fn(),
       countLikes: jest.fn(),
       countRetweets: jest.fn(),
@@ -116,13 +117,25 @@ describe('PostServiceImpl', () => {
 
       repository.getById.mockResolvedValue(post)
       followerService.isFollowing.mockResolvedValue(true)
+      userService.getUserExtended.mockResolvedValue({ id: 'author-1' } as any)
+      repository.countCommentsByRootIds.mockResolvedValue({ [postId]: 7 })
+      reactionService.countReactionsByPostIds.mockResolvedValue({ likes: { [postId]: 3 }, retweets: { [postId]: 1 } })
 
       const result = await service.getPost(userId, postId)
 
-      expect(result).toEqual(post)
+      expect(result).toMatchObject({
+        id: postId,
+        authorId: 'author-1',
+        qtyComments: 7,
+        qtyLikes: 3,
+        qtyRetweets: 1
+      })
       expect(repository.getById).toHaveBeenCalledWith(postId)
       expect(followerService.isFollowing).toHaveBeenCalledWith({ followerId: userId, followedId: post.authorId })
       expect(userService.isPublicProfile).not.toHaveBeenCalled()
+      expect(userService.getUserExtended).toHaveBeenCalledWith('author-1')
+      expect(repository.countCommentsByRootIds).toHaveBeenCalledWith([postId])
+      expect(reactionService.countReactionsByPostIds).toHaveBeenCalledWith([postId])
     })
 
     it('should return a post when author is public (not following)', async () => {
@@ -139,12 +152,24 @@ describe('PostServiceImpl', () => {
       repository.getById.mockResolvedValue(post)
       followerService.isFollowing.mockResolvedValue(false)
       userService.isPublicProfile.mockResolvedValue(true)
+      userService.getUserExtended.mockResolvedValue({ id: 'author-1' } as any)
+      repository.countCommentsByRootIds.mockResolvedValue({ [postId]: 0 })
+      reactionService.countReactionsByPostIds.mockResolvedValue({ likes: { [postId]: 0 }, retweets: { [postId]: 0 } })
 
       const result = await service.getPost(userId, postId)
 
-      expect(result).toEqual(post)
+      expect(result).toMatchObject({
+        id: postId,
+        authorId: 'author-1',
+        qtyComments: 0,
+        qtyLikes: 0,
+        qtyRetweets: 0
+      })
       expect(followerService.isFollowing).toHaveBeenCalledWith({ followerId: userId, followedId: post.authorId })
       expect(userService.isPublicProfile).toHaveBeenCalledWith(post.authorId)
+      expect(userService.getUserExtended).toHaveBeenCalledWith('author-1')
+      expect(repository.countCommentsByRootIds).toHaveBeenCalledWith([postId])
+      expect(reactionService.countReactionsByPostIds).toHaveBeenCalledWith([postId])
     })
   })
 

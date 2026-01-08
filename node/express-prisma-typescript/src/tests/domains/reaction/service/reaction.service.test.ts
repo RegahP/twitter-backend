@@ -98,4 +98,40 @@ describe('ReactionServiceImpl', () => {
       expect(reactionRepository.deleteReaction).toHaveBeenCalledWith(userId, data)
     })
   })
+
+  describe('getReaction', () => {
+    it('should return reaction (or null) when post exists', async () => {
+      const userId = 'user-1'
+      const postId = 'post-1'
+      const type = 'like' as const
+
+      const post: PostDTO = {
+        id: postId,
+        authorId: 'author-1',
+        content: 'hello',
+        images: [],
+        createdAt: new Date()
+      }
+
+      const reaction: ReactionDTO = {
+        id: 'reaction-1',
+        userId,
+        postId,
+        type,
+        createdAt: new Date()
+      }
+
+      postRepository.getById.mockResolvedValue(post)
+      reactionRepository.getReaction.mockResolvedValue(reaction)
+
+      const result = await service.getReaction(userId, postId, type)
+
+      expect(postRepository.getById).toHaveBeenCalledWith(postId)
+      expect(reactionRepository.getReaction).toHaveBeenCalledWith(
+        userId,
+        expect.objectContaining({ postId, type })
+      )
+      expect(result).toEqual(reaction)
+    })
+  })
 })

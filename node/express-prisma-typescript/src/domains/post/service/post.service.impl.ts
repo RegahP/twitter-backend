@@ -28,7 +28,7 @@ export class PostServiceImpl implements PostService {
     await this.repository.delete(postId)
   }
 
-  async getPost (userId: string, postId: string): Promise<PostDTO> {
+  async getPost (userId: string, postId: string): Promise<ExtendedPostDTO> {
     const post = await this.repository.getById(postId)
     if (!post) throw new NotFoundException('post')
     const isFollowing = await this.followerService.isFollowing({ followerId: userId, followedId: post.authorId })
@@ -36,7 +36,22 @@ export class PostServiceImpl implements PostService {
       const isPublic = await this.userService.isPublicProfile(post.authorId)
       if (!isPublic) throw new ForbiddenException()
     }
-    return post
+    const [author, reactionCounts] = await Promise.all([
+      this.userService.getUserExtended(post.authorId),
+      this.reactionService.countReactionsByPostIds([post.id])
+    ])
+
+    const qtyComments = post instanceof CommentDTO
+      ? await this.repository.countCommentsByParentId(post.id)
+      : (await this.repository.countCommentsByRootIds([post.id]))[post.id] ?? 0
+
+    return new ExtendedPostDTO(
+      post,
+      author,
+      qtyComments,
+      reactionCounts.likes[post.id] ?? 0,
+      reactionCounts.retweets[post.id] ?? 0
+    )
   }
 
   async getLatestPosts (userId: string, options: CursorPagination): Promise<ExtendedPostDTO[]> {

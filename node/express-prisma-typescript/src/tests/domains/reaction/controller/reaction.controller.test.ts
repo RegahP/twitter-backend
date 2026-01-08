@@ -40,4 +40,18 @@ describe('Reaction Controller (happy paths)', () => {
     const app = createAuthedApp()
     await request(app).delete('/post-1/?type=like').expect(200)
   })
+
+  it('GET /:postId/?type=like should return 200 + reaction (or null)', async () => {
+    jest.spyOn(ReactionServiceImpl.prototype, 'getReaction').mockResolvedValue({
+      id: 'r1',
+      userId: 'user-1',
+      postId: 'post-1',
+      type: 'like',
+      createdAt: new Date()
+    } as any)
+
+    const app = createAuthedApp()
+    const res = await request(app).get('/post-1/?type=like').expect(200)
+    expect(res.body).toMatchObject({ userId: 'user-1', postId: 'post-1', type: 'like' })
+  })
 })
