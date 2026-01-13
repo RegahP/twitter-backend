@@ -3,12 +3,12 @@ import HttpStatus from 'http-status'
 // express-async-errors is a module that handles async errors in express, don't forget import it in your new controllers
 import 'express-async-errors'
 
-import { assertAllowedImageContentType, assertUserPostImageKey, isHttpUrl, buildPostImageKey, createPresignedPutUrl, db, BodyValidation, ValidationException } from '@utils'
+import { assertAllowedImageContentType, assertUserPostImageKey, isHttpUrl, buildPostImageKey, createPresignedDeleteUrl, createPresignedPutUrl, db, BodyValidation, ValidationException } from '@utils'
 import { randomUUID } from 'crypto'
 
 import { PostRepositoryImpl } from '../repository'
 import { PostService, PostServiceImpl } from '../service'
-import { CreatePostImageUploadUrlsDTO, CreatePostInputDTO, CreateCommentBodyDTO, CreateCommentInputDTO } from '../dto'
+import { CreatePostImageDeleteUrlsDTO, CreatePostImageUploadUrlsDTO, CreatePostInputDTO, CreateCommentBodyDTO, CreateCommentInputDTO } from '../dto'
 import { UserServiceImpl } from '@domains/user/service'
 import { UserRepositoryImpl } from '@domains/user/repository'
 import { FollowerServiceImpl } from '@domains/follower/service'
@@ -59,6 +59,36 @@ postRouter.post(
     )
 
     return res.status(HttpStatus.OK).json({ uploads })
+  }
+)
+
+postRouter.post(
+  '/images/delete-urls',
+  BodyValidation(CreatePostImageDeleteUrlsDTO),
+  async (req: Request, res: Response) => {
+    const { userId } = res.locals.context as { userId: string }
+    const { keys } = req.body as CreatePostImageDeleteUrlsDTO
+
+    for (const key of keys) {
+      if (isHttpUrl(key)) {
+        throw new ValidationException([{ field: 'keys', message: 'keys must be S3 object keys, not URLs' }])
+      }
+
+      try {
+        assertUserPostImageKey(userId, key)
+      } catch (err) {
+        throw new ValidationException([{ field: 'keys', message: (err as Error).message }])
+      }
+    }
+
+    const deletes = await Promise.all(
+      keys.map(async key => {
+        const { deleteUrl } = await createPresignedDeleteUrl({ key })
+        return { key, deleteUrl }
+      })
+    )
+
+    return res.status(HttpStatus.OK).json({ deletes })
   }
 )
 

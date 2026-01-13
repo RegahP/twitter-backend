@@ -117,3 +117,10 @@ export class CreatePostImageUploadUrlsDTO {
   @IsString({ each: true })
     contentTypes!: string[]
 }
+
+export class CreatePostImageDeleteUrlsDTO {
+  @IsArray()
+  @ArrayMaxSize(4)
+  @IsString({ each: true })
+    keys!: string[]
+}

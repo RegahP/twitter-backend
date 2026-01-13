@@ -43,6 +43,18 @@ describe('Post Controller (happy paths)', () => {
     expect(res.body.uploads[0]).toHaveProperty('key')
   })
 
+  it('POST /images/delete-urls should return 200 + deletes', async () => {
+    const app = createAuthedApp()
+    const res = await request(app)
+      .post('/images/delete-urls')
+      .send({ keys: ['posts/user-1/abc.png'] })
+      .expect(200)
+
+    expect(res.body.deletes).toHaveLength(1)
+    expect(res.body.deletes[0]).toHaveProperty('deleteUrl')
+    expect(res.body.deletes[0]).toHaveProperty('key', 'posts/user-1/abc.png')
+  })
+
   it('GET /by_user/:userId should return 200 + posts', async () => {
     jest
       .spyOn(PostServiceImpl.prototype, 'getPostsByAuthor')

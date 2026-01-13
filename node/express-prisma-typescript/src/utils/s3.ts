@@ -1,4 +1,4 @@
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { Constants } from './constants'
 
@@ -92,6 +92,11 @@ export interface PresignedPutResult {
   publicUrl: string
 }
 
+export interface PresignedDeleteResult {
+  key: string
+  deleteUrl: string
+}
+
 export interface PresignPutOptions {
   key: string
   contentType: string
@@ -112,7 +117,11 @@ export const createPresignedPutUrl = async (options: PresignPutOptions): Promise
     throw new Error('AWS_REGION is not configured')
   }
 
-  const s3 = new S3Client({ region })
+  const s3 = new S3Client({
+    region,
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED'
+  })
   const command = new PutObjectCommand({
     Bucket: bucket,
     Key: options.key,
@@ -123,6 +132,38 @@ export const createPresignedPutUrl = async (options: PresignPutOptions): Promise
   const publicUrl = buildS3PublicUrl(options.key)
 
   return { key: options.key, uploadUrl, publicUrl }
+}
+
+export interface PresignDeleteOptions {
+  key: string
+  expiresInSeconds?: number
+}
+
+export const createPresignedDeleteUrl = async (options: PresignDeleteOptions): Promise<PresignedDeleteResult> => {
+  const bucket: string = Constants.AWS_S3_BUCKET_NAME
+  const region: string = Constants.AWS_REGION
+
+  if (bucket === 'CHANGE_ME_BUCKET' || bucket.trim().length === 0) {
+    throw new Error('AWS_S3_BUCKET_NAME is not configured')
+  }
+
+  if (region.trim().length === 0) {
+    throw new Error('AWS_REGION is not configured')
+  }
+
+  const s3 = new S3Client({
+    region,
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED'
+  })
+  const command = new DeleteObjectCommand({
+    Bucket: bucket,
+    Key: options.key
+  })
+
+  const deleteUrl = await getSignedUrl(s3, command, { expiresIn: options.expiresInSeconds ?? 300 })
+
+  return { key: options.key, deleteUrl }
 }
 
 export const buildUserProfileImageKey = (userId: string, contentType: string, objectId: string): string => {
