@@ -29,9 +29,9 @@ const service: PostService = new PostServiceImpl(
 
 postRouter.get('/', async (req: Request, res: Response) => {
   const { userId } = res.locals.context as { userId: string }
-  const { limit, before, after } = req.query as Record<string, string>
+  const { limit, self, before, after } = req.query as Record<string, string>
 
-  const posts = await service.getLatestPosts(userId, { limit: Number(limit), before, after })
+  const posts = await service.getLatestPosts(userId, self === 'true', { limit: Number(limit), before, after })
 
   return res.status(HttpStatus.OK).json(posts)
 })

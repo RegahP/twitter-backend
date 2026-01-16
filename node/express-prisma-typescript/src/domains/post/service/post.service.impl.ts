@@ -31,10 +31,12 @@ export class PostServiceImpl implements PostService {
   async getPost (userId: string, postId: string): Promise<ExtendedPostDTO> {
     const post = await this.repository.getById(postId)
     if (!post) throw new NotFoundException('post')
-    const isFollowing = await this.followerService.isFollowing({ followerId: userId, followedId: post.authorId })
-    if (!isFollowing) {
-      const isPublic = await this.userService.isPublicProfile(post.authorId)
-      if (!isPublic) throw new ForbiddenException()
+    if (post.authorId !== userId) {
+      const isFollowing = await this.followerService.isFollowing({ followerId: userId, followedId: post.authorId })
+      if (!isFollowing) {
+        const isPublic = await this.userService.isPublicProfile(post.authorId)
+        if (!isPublic) throw new ForbiddenException()
+      }
     }
     const [author, reactionCounts] = await Promise.all([
       this.userService.getUserExtended(post.authorId),
@@ -54,8 +56,8 @@ export class PostServiceImpl implements PostService {
     )
   }
 
-  async getLatestPosts (userId: string, options: CursorPagination): Promise<ExtendedPostDTO[]> {
-    const latestPosts = await this.repository.getAllFollowedByDatePaginated(userId, options)
+  async getLatestPosts (userId: string, self: boolean, options: CursorPagination): Promise<ExtendedPostDTO[]> {
+    const latestPosts = await this.repository.getAllFollowedByDatePaginated(userId, self, options)
     if (latestPosts.length === 0) return []
 
     const postIds = latestPosts.map(p => p.id)
@@ -84,11 +86,14 @@ export class PostServiceImpl implements PostService {
   }
 
   async getPostsByAuthor (userId: any, authorId: string): Promise<ExtendedPostDTO[]> {
-    const isFollowing = await this.followerService.isFollowing({ followerId: userId, followedId: authorId })
-    if (!isFollowing) {
-      const isPublic = await this.userService.isPublicProfile(authorId)
-      if (!isPublic) throw new ForbiddenException()
+    if (userId !== authorId) {
+      const isFollowing = await this.followerService.isFollowing({ followerId: userId, followedId: authorId })
+      if (!isFollowing) {
+        const isPublic = await this.userService.isPublicProfile(authorId)
+        if (!isPublic) throw new ForbiddenException()
+      }
     }
+
     const posts = await this.repository.getByAuthorId(authorId)
     if (posts.length === 0) return []
 
