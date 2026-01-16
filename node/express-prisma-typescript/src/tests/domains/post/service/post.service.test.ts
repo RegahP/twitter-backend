@@ -176,6 +176,7 @@ describe('PostServiceImpl', () => {
   describe('getLatestPosts', () => {
     it('should return latest followed posts', async () => {
       const userId = 'user-1'
+      const self = false
       const options = { limit: 10 }
 
       const post: PostDTO = { id: 'p2', authorId: 'a2', content: 'c2', images: [], createdAt: new Date() }
@@ -185,9 +186,9 @@ describe('PostServiceImpl', () => {
       repository.countCommentsByRootIds.mockResolvedValue({ p2: 7 })
       reactionService.countReactionsByPostIds.mockResolvedValue({ likes: { p2: 3 }, retweets: { p2: 1 } })
 
-      const result = await service.getLatestPosts(userId, options)
+      const result = await service.getLatestPosts(userId, self, options)
 
-      expect(repository.getAllFollowedByDatePaginated).toHaveBeenCalledWith(userId, options)
+      expect(repository.getAllFollowedByDatePaginated).toHaveBeenCalledWith(userId, self, options)
       expect(userService.getUsersExtended).toHaveBeenCalledWith(['a2'])
       expect(repository.countCommentsByRootIds).toHaveBeenCalledWith(['p2'])
       expect(reactionService.countReactionsByPostIds).toHaveBeenCalledWith(['p2'])
