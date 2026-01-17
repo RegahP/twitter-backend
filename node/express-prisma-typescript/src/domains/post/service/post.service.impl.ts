@@ -1,4 +1,4 @@
-import { CommentDTO, CreateCommentInputDTO, CreatePostInputDTO, ExtendedPostDTO, PostDTO } from '../dto'
+import { CommentDTO, CreateCommentInputDTO, CreatePostInputDTO, ExtendedCommentDTO, ExtendedPostDTO, PostDTO } from '../dto'
 import { PostRepository } from '../repository'
 import { PostService } from '.'
 import { validate } from 'class-validator'
@@ -121,10 +121,19 @@ export class PostServiceImpl implements PostService {
     return await this.repository.createComment(userId, data)
   }
 
-  async getComments (postId: string, options: OffsetPagination): Promise<CommentDTO[]> {
+  async getComments (postId: string, options: OffsetPagination): Promise<ExtendedCommentDTO[]> {
     const post = await this.repository.getById(postId)
     if (!post) throw new NotFoundException('post')
-    return await this.repository.getCommentsByParentId(postId, options)
+    const comments = await this.repository.getCommentsByParentId(postId, options)
+    const authorIds = Array.from(new Set(comments.map(c => c.authorId)))
+    const authors = await this.userService.getUsersExtended(authorIds)
+    const authorsById = new Map(authors.map(a => [a.id, a]))
+
+    return comments.map(comment => {
+      const author = authorsById.get(comment.authorId)
+      if (author == null) throw new NotFoundException('user')
+      return new ExtendedCommentDTO(comment, author)
+    })
   }
 
   async countCommentsByRootId (rootId: string): Promise<number> {

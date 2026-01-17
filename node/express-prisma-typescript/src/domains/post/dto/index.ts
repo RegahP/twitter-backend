@@ -111,6 +111,29 @@ export class CommentDTO {
   createdAt: Date
 }
 
+export class ExtendedCommentDTO {
+  constructor (comment: CommentDTO, author: ExtendedUserDTO) {
+    if (comment.parentId == null || comment.rootId == null) {
+      throw new Error('CommentDTO requires a non-null parentId and rootId')
+    }
+    this.id = comment.id
+    this.parentId = comment.parentId
+    this.rootId = comment.rootId
+    this.author = author
+    this.content = comment.content
+    this.images = comment.images.map(maybeToS3PublicUrl)
+    this.createdAt = comment.createdAt
+  }
+
+  id: string
+  parentId: string
+  rootId: string
+  author: ExtendedUserDTO
+  content: string
+  images: string[]
+  createdAt: Date
+}
+
 export class CreatePostImageUploadUrlsDTO {
   @IsArray()
   @ArrayMaxSize(4)

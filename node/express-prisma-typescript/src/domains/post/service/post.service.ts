@@ -1,4 +1,4 @@
-import { CommentDTO, CreateCommentInputDTO, CreatePostInputDTO, ExtendedPostDTO, PostDTO } from '../dto'
+import { CommentDTO, CreateCommentInputDTO, CreatePostInputDTO, ExtendedCommentDTO, ExtendedPostDTO, PostDTO } from '../dto'
 import { OffsetPagination } from '@types'
 
 export interface PostService {
@@ -8,7 +8,7 @@ export interface PostService {
   getLatestPosts: (userId: string, self: boolean, options: { limit?: number, before?: string, after?: string }) => Promise<ExtendedPostDTO[]>
   getPostsByAuthor: (userId: any, authorId: string) => Promise<ExtendedPostDTO[]>
   createComment: (userId: string, data: CreateCommentInputDTO) => Promise<CommentDTO>
-  getComments: (postId: string, options: OffsetPagination) => Promise<CommentDTO[]>
+  getComments: (postId: string, options: OffsetPagination) => Promise<ExtendedCommentDTO[]>
   countCommentsByRootId: (rootId: string) => Promise<number>
   countCommentsByParentId: (parentId: string) => Promise<number>
   getCommentRootId: (postId: string) => Promise<string>
