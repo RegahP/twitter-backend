@@ -327,17 +327,26 @@ describe('PostServiceImpl', () => {
       }
 
       const comments = [
-        { id: 'c1', parentId: postId, authorId: 'u1', content: 'a', images: [], createdAt: new Date() }
+        { id: 'c1', parentId: postId, rootId: postId, authorId: 'u1', content: 'a', images: [], createdAt: new Date() }
       ]
 
       repository.getById.mockResolvedValue(parentPost)
       repository.getCommentsByParentId.mockResolvedValue(comments as any)
+      userService.getUsersExtended.mockResolvedValue([{ id: 'u1' } as any])
 
       const result = await service.getComments(postId, options)
 
-      expect(result).toEqual(comments)
+      expect(result).toHaveLength(1)
+      expect(result[0]).toMatchObject({
+        id: 'c1',
+        parentId: postId,
+        rootId: postId,
+        content: 'a'
+      })
+      expect(result[0]).toHaveProperty('author')
       expect(repository.getById).toHaveBeenCalledWith(postId)
       expect(repository.getCommentsByParentId).toHaveBeenCalledWith(postId, options)
+      expect(userService.getUsersExtended).toHaveBeenCalledWith(['u1'])
     })
   })
 })
